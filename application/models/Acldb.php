@@ -5,7 +5,9 @@
  */
 class Application_Model_Acldb extends Zend_Db_Table
 {
+	// Таблица базы данных
 	protected $_name	= 'acl';
+	// Первичный ключ
 	protected $_primary	= 'login';
 
 	/**
@@ -61,4 +63,4 @@ class Application_Model_Acldb extends Zend_Db_Table
 		);
 	}
 }
-
+?>

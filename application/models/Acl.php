@@ -8,7 +8,7 @@ class Application_Model_Acl extends Zend_Acl
 	const SALT				= 'salt';
 
 	public $role 			= 'guest';
-	public $login			=	null;
+	public $login			= null;
 
 	protected $_ACL_DB		= null;
 
@@ -81,4 +81,4 @@ class Application_Model_Acl extends Zend_Acl
 		}
 	}
 }
-
+?>
