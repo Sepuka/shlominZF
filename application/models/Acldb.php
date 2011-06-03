@@ -3,13 +3,15 @@
  * Класс для работы с таблицей контроля доступа acl
  *
  */
-class Ex_acldb extends Zend_Db_Table
+class Application_Model_Acldb extends Zend_Db_Table
 {
 	protected $_name	= 'acl';
 	protected $_primary	= 'login';
 
 	/**
 	 * Идентификация и аутентификация
+	 * 
+	 * Возвращает строку содержащую роль текущего пользователя
 	 *
 	 * @param string $login
 	 * @param string $hash
@@ -27,6 +29,8 @@ class Ex_acldb extends Zend_Db_Table
 
 	/**
 	 * Авторизация
+	 * 
+	 * Возвращает массив вида array('login'=>'Логин пользователя', 'role'=>'Его роль')
 	 *
 	 * @param string $auth
 	 * @return array
@@ -40,7 +44,16 @@ class Ex_acldb extends Zend_Db_Table
 		return ($data = $stmt->fetchAll()) ? $data[0] : array('login' => null, 'role' => 'guest');
 	}
 
-	function setAuth($login, $auth)
+	/**
+	 * Устанавливает идентификационный токен для пользователя
+	 * 
+	 * Токен используется для передачи в cookie
+	 *
+	 * @param string $login
+	 * @param string $auth
+	 * @return integer
+	 */
+	function setAuthToken($login, $auth)
 	{
 		return $this->update(
 			array('cookie' => $auth),
@@ -48,4 +61,4 @@ class Ex_acldb extends Zend_Db_Table
 		);
 	}
 }
-?>
+

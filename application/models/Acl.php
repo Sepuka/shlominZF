@@ -3,7 +3,7 @@
  * Класс контроля доступа
  *
  */
-class Ex_acl extends Zend_Acl
+class Application_Model_Acl extends Zend_Acl
 {
 	const SALT				= 'salt';
 
@@ -14,7 +14,7 @@ class Ex_acl extends Zend_Acl
 
 	public function __construct()
 	{
-		$this->_ACL_DB = new Ex_acldb();
+		$this->_ACL_DB = new Application_Model_Acldb();
 		$this->_setACL();
 		$this->_detectUser();
 	}
@@ -55,8 +55,7 @@ class Ex_acl extends Zend_Acl
 			$user = $this->_ACL_DB->authorization($_COOKIE['auth']);
 			$this->login = $user['login'];
 			$this->role = $user['role'];
-		} else
-			return;
+		}
 	}
 
 	/**
@@ -76,10 +75,10 @@ class Ex_acl extends Zend_Acl
 		    	$this->role = $user;
 		    	if ($saveme) {
 		    		$auth = sha1(microtime(true) . $login);
-		    		$this->_ACL_DB->setAuth($login, $auth) && setcookie('auth', $auth, time() + 300, '/');
+		    		$this->_ACL_DB->setAuthToken($login, $auth) && setcookie('auth', $auth, time() + 300, '/');
 		    	}
 			}
 		}
 	}
 }
-?>
+
