@@ -37,6 +37,8 @@ class AdminController extends Zend_Controller_Action
 			$this->_redirect('admin');
 
     	$this->_helper->layout->setLayout('layout-admin-login');
+    	if ($this->_ACL->wrongData)
+    		$this->view->wrongData = true;
     }
 
     /**

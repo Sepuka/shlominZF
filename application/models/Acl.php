@@ -5,13 +5,22 @@
  */
 class Application_Model_Acl extends Zend_Acl
 {
+	# Соль для пароля
 	const SALT				= 'salt';
 
+	# Роль текущего пользователя
 	public $role 			= 'guest';
+	# Логин текущего пользователя
 	public $login			= null;
+	# Признак того что данные для входа не верны
+	public $wrongData		= false;
 
 	protected $_ACL_DB		= null;
 
+	/**
+	 * Конструктор класса
+	 *
+	 */
 	public function __construct()
 	{
 		$this->_ACL_DB = new Application_Model_Acldb();
@@ -70,14 +79,14 @@ class Application_Model_Acl extends Zend_Acl
 		if (!empty($login) && !empty($hash)) {
 			$user = $this->_ACL_DB->authentication($login, $hash);
 			if ($user) {
-				$_SESSION['role'] = $user;
+				$this->role = $_SESSION['role'] = $user;
 				$_SESSION['login'] = $login;
-		    	$this->role = $user;
 		    	if ($saveme) {
 		    		$auth = sha1(microtime(true) . $login);
 		    		$this->_ACL_DB->setAuthToken($login, $auth) && setcookie('auth', $auth, time() + 300, '/');
 		    	}
-			}
+			} else
+				$this->wrongData = true;
 		}
 	}
 }

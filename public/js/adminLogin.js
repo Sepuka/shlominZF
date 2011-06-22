@@ -12,6 +12,10 @@ Ext.onReady(function() {
 			margin: '5 0 0 5'
 		},
 		items: [{
+			xtype: 'fieldcontainer',
+			html: wrongDataMsg,
+			cls: 'wrongData'
+		},{
 			fieldLabel: 'логин',
 			name: 'login',
 			inputType: 'text',
