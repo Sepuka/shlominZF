@@ -1,0 +1,51 @@
+<script language="javascript" type="text/javascript">
+Ext.onReady(function() {
+
+	var loadMaskGrid = new Ext.LoadMask(
+	    Ext.getBody(),
+	    {
+	        msg: 'Пожалуйста, подождите. Идет загрузка ...'
+	    });
+
+	Ext.define('modelData', {
+	    extend: 'Ext.data.Model',
+	    fields: [
+	        {name: 'id', type: 'integer'},
+            {name: 'sequence', type: 'integer'},
+            {name: 'folder', type: 'string'},
+            {name: 'parent', type: 'string'},
+			{name: 'name', type: 'string'}
+	    ]
+	});
+
+	var store = new Ext.data.Store({
+		model: 'modelData',
+		autoLoad: true,
+        proxy: {
+        	url : '/data.json',
+        	type: 'ajax',
+        	reader: {
+        		type: 'json',
+        		root: 'categories'
+        	}
+        }
+	});
+
+	var grid = Ext.create('Ext.grid.Panel', {
+		title: 'Редактирование категорий/подкатегорий сайта',
+		loadMask: loadMaskGrid,
+		store: store
+	});
+
+	Ext.create('Ext.container.Viewport', {
+		renderTo: Ext.getBody(),
+		xtype: 'grid',
+		items: [{
+			region: 'center',
+			items: grid
+		},{
+			region: 'west'
+		}]
+	});
+});
+</script>

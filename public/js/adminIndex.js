@@ -5,11 +5,19 @@ Ext.onReady(function() {
 		autoShow: true,
 		closable: false,
 		resizable: false,
-		xtype: 'window'
+		xtype: 'window',
+		firstShow: 1
 	};
 	var CategoriesIcon = new Ext.create('Ext.window.Window', AbstractIcon);
 	CategoriesIcon.setTitle('Разделы сайта');
 	CategoriesIcon.update('Редактирование разделов (категорий) сайта');
+	CategoriesIcon.addListener('activate', function(self, opt) {
+		if (self.firstShow) {
+			self.firstShow--;
+		} else {
+			window.location = '/admin/categories';
+		}
+	});
 
 	var ArticlesIcon = new Ext.create('Ext.window.Window', AbstractIcon);
 	ArticlesIcon.setTitle('Статьи');

@@ -83,7 +83,7 @@ class Application_Model_Acl extends Zend_Acl
 				$_SESSION['login'] = $login;
 		    	if ($saveme) {
 		    		$auth = sha1(microtime(true) . $login);
-		    		$this->_ACL_DB->setAuthToken($login, $auth) && setcookie('auth', $auth, time() + 300, '/');
+		    		$this->_ACL_DB->setAuthToken($login, $auth) && setcookie('auth', $auth, time() + 86400, '/');
 		    	}
 			} else
 				$this->wrongData = true;

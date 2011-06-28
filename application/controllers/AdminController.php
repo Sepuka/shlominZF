@@ -15,6 +15,18 @@ class AdminController extends Zend_Controller_Action
     }
 
     /**
+     * Преддиспетчер
+     *
+     */
+    public function preDispatch()
+    {
+    	// Перенаправление на login для авторизации
+    	if ($this->getRequest()->getActionName() != 'login')
+    		if (!$this->_ACL->isAllowed($this->_ACL->role, 'admin', 'view'))
+				$this->_redirect('admin/login');
+    }
+
+    /**
      * Индексная страница админки
      *
      */
@@ -50,6 +62,11 @@ class AdminController extends Zend_Controller_Action
     	setcookie('auth', null, 0, '/');
     	session_destroy();
     	$this->_redirect('/');
+    }
+
+    public function categoriesAction()
+    {
+    	$this->_helper->layout->setLayout('layout-site');
     }
 }
 
