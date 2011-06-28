@@ -7,22 +7,28 @@ Ext.onReady(function() {
 	        msg: 'Пожалуйста, подождите. Идет загрузка ...'
 	    });
 
-	Ext.define('modelData', {
-	    extend: 'Ext.data.Model',
-	    fields: [
-	        {name: 'id', type: 'integer'},
-            {name: 'sequence', type: 'integer'},
-            {name: 'folder', type: 'string'},
-            {name: 'parent', type: 'string'},
+	function folderFormat(f)
+	{
+		if (f == 0) return 'файл/статья';
+        if (f == 1) return 'папка';
+	}
+
+	Ext.define('dataModel', {
+	   	extend: 'Ext.data.Model',
+	   	fields: [
+			{name: 'id', type: 'integer'},
+			{name: 'sequence', type: 'integer'},
+			{name: 'folder', type: 'string'},
+			{name: 'parent', type: 'string'},
 			{name: 'name', type: 'string'}
-	    ]
+		]
 	});
 
 	var store = new Ext.data.Store({
-		model: 'modelData',
 		autoLoad: true,
+		model: 'dataModel',
         proxy: {
-        	url : '/data.json',
+        	url : '/admin/categoriesView',
         	type: 'ajax',
         	reader: {
         		type: 'json',
@@ -34,7 +40,14 @@ Ext.onReady(function() {
 	var grid = Ext.create('Ext.grid.Panel', {
 		title: 'Редактирование категорий/подкатегорий сайта',
 		loadMask: loadMaskGrid,
-		store: store
+		store: store,
+		columns: [
+			{header: 'id', dataIndex: 'id'},
+			{header: 'порядок', dataIndex: 'sequence'},
+			{header: 'тип данных', dataIndex: 'folder', renderer: folderFormat},
+			{header: 'родитель', dataIndex: 'parent'},
+			{header: 'имя', dataIndex: 'name'}
+		]
 	});
 
 	Ext.create('Ext.container.Viewport', {

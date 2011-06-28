@@ -7,6 +7,7 @@ class AdminController extends Zend_Controller_Action
 {
 
 	protected $_ACL			=	null;
+	protected $_categories	=	null;
 
     public function init()
     {
@@ -67,6 +68,14 @@ class AdminController extends Zend_Controller_Action
     public function categoriesAction()
     {
     	$this->_helper->layout->setLayout('layout-site');
+    }
+
+    public function categoriesviewAction()
+    {
+    	$this->_helper->viewRenderer->setNoRender();
+    	$this->_helper->layout->disableLayout();
+    	$this->_categories = new Application_Model_Categories();
+    	echo $this->_categories->viewCategories();
     }
 }
 
