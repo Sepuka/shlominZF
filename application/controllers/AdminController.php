@@ -5,7 +5,6 @@
  */
 class AdminController extends Zend_Controller_Action
 {
-
 	protected $_ACL			=	null;
 	protected $_categories	=	null;
 
@@ -68,6 +67,7 @@ class AdminController extends Zend_Controller_Action
     public function categoriesAction()
     {
     	$this->_helper->layout->setLayout('layout-site');
+    	$this->view->books = 'books';
     }
 
     public function categoriesviewAction()

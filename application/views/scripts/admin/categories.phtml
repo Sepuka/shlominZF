@@ -24,17 +24,32 @@ Ext.onReady(function() {
 		]
 	});
 
+	var URLcategoriesAll = '/admin/categoriesView';
+
 	var store = new Ext.data.Store({
 		autoLoad: true,
 		model: 'dataModel',
         proxy: {
-        	url : '/admin/categoriesView',
+        	url : URLcategoriesAll,
         	type: 'ajax',
         	reader: {
         		type: 'json',
-        		root: 'categories'
-        	}
-        }
+        		root: 'categories',
+        		totalProperty: 'total'
+			}
+		}
+	});
+
+	var menu = new Ext.Panel({
+        title: 'Навигация по спискам',
+        items: [
+        	new Ext.form.Label({
+                html: 'список корневых категорий'
+        	}),
+        	new Ext.form.field.ComboBox({
+        		store: [["q","q"],["w","w"]]
+        	})
+        ]
 	});
 
 	var grid = Ext.create('Ext.grid.Panel', {
@@ -47,18 +62,41 @@ Ext.onReady(function() {
 			{header: 'тип данных', dataIndex: 'folder', renderer: folderFormat},
 			{header: 'родитель', dataIndex: 'parent'},
 			{header: 'имя', dataIndex: 'name'}
-		]
-	});
-
-	Ext.create('Ext.container.Viewport', {
-		renderTo: Ext.getBody(),
-		xtype: 'grid',
-		items: [{
-			region: 'center',
-			items: grid
+		],
+		dockedItems: [{
+	       	xtype: 'pagingtoolbar',
+	       	store: store,
+	       	dock: 'bottom',
+			displayInfo: true
+		}],
+		buttons: [{
+			text: 'создать новый раздел'
 		},{
-			region: 'west'
+			text: 'удалить выбранный раздел'
+		},{
+			text: 'показать все разделы',
+			handler: function() {
+                store.load();
+            }
 		}]
 	});
+
+	var viewport = Ext.create('Ext.container.Viewport', {
+		layout: 'border',
+		items: [{
+			region: 'west',
+			itemId: 'westMenuPanel',
+			width: 200,
+			items: menu
+		},{
+			region: 'center',
+			itemId: 'centerMenuPanel',
+			items: grid
+		}]
+	});
+
+	grid.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
+	grid.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
+	alert('<?=$this->books?>');
 });
 </script>
