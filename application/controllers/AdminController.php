@@ -5,13 +5,15 @@
  */
 class AdminController extends Zend_Controller_Action
 {
-	protected $_ACL			=	null;
-	protected $_categories	=	null;
+	protected $_ACL			=	null;	# Указатель на объект ACL
+	protected $_categories	=	null;	# Указатель на объект модели категорий
 
     public function init()
     {
     	# Подключение системы контроля доступа
     	$this->_ACL = new Application_Model_Acl();
+    	# Подключение модели для работы с категориями
+    	$this->_categories = new Application_Model_Categories();
     }
 
     /**
@@ -64,18 +66,29 @@ class AdminController extends Zend_Controller_Action
     	$this->_redirect('/');
     }
 
+    /**
+     * Просмотр категорий и действий над ними
+     *
+     */
     public function categoriesAction()
     {
     	$this->_helper->layout->setLayout('layout-site');
-    	$this->view->books = 'books';
+    	$this->view->categoriesListRoot = $this->_categories->getCategoriesListRoot();
     }
 
+    /**
+     * Получение списка категорий для таблици в формате JSON
+     *
+     */
     public function categoriesviewAction()
     {
     	$this->_helper->viewRenderer->setNoRender();
     	$this->_helper->layout->disableLayout();
-    	$this->_categories = new Application_Model_Categories();
-    	echo $this->_categories->viewCategories();
+    	$category = $this->_request->getQuery('category');
+    	if (!empty($category))
+    		echo $this->_categories->getCategoriesListSpecified($category);
+    	else
+    		echo $this->_categories->viewCategories();
     }
 }
 

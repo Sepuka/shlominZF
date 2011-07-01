@@ -47,7 +47,14 @@ Ext.onReady(function() {
                 html: 'список корневых категорий'
         	}),
         	new Ext.form.field.ComboBox({
-        		store: [["q","q"],["w","w"]]
+        		store: <?=$this->categoriesListRoot?>,
+        		listeners: {
+        			'select': function(field, value, opt) {
+        				store.load({
+        					url:URLcategoriesAll + '?category=' + field.getValue()
+        				});
+        			}
+        		}
         	})
         ]
 	});
@@ -97,6 +104,5 @@ Ext.onReady(function() {
 
 	grid.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
 	grid.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
-	alert('<?=$this->books?>');
 });
 </script>
