@@ -85,8 +85,11 @@ class AdminController extends Zend_Controller_Action
     	$this->_helper->viewRenderer->setNoRender();
     	$this->_helper->layout->disableLayout();
     	$category = $this->_request->getQuery('category');
+    	$type = $this->_request->getQuery('type');
     	if (!empty($category))
     		echo $this->_categories->getCategoriesListSpecified($category);
+    	elseif (!isset($type))
+    		echo $this->_categories->getCategoriesListType($type);
     	else
     		echo $this->_categories->viewCategories();
     }

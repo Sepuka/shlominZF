@@ -42,6 +42,9 @@ Ext.onReady(function() {
 
 	var menu = new Ext.Panel({
         title: 'Навигация по спискам',
+        defaults: {
+        	width: 190
+        },
         items: [
         	new Ext.form.Label({
                 html: 'список корневых категорий'
@@ -55,6 +58,19 @@ Ext.onReady(function() {
         				});
         			}
         		}
+        	}),
+			new Ext.form.Label({
+                html: 'показать только'
+        	}),
+        	new Ext.form.field.ComboBox({
+        		store: [[0, "статьи"], [1, "папки"]],
+        		listeners: {
+        			'select': function(field, value, opt) {
+        				store.load({
+        					url:URLcategoriesAll + '?type=' + field.getValue()
+        				});
+        			}
+        		}
         	})
         ]
 	});
@@ -63,12 +79,13 @@ Ext.onReady(function() {
 		title: 'Редактирование категорий/подкатегорий сайта',
 		loadMask: loadMaskGrid,
 		store: store,
+		sortableColumns: false,
 		columns: [
-			{header: 'id', dataIndex: 'id'},
-			{header: 'порядок', dataIndex: 'sequence'},
-			{header: 'тип данных', dataIndex: 'folder', renderer: folderFormat},
-			{header: 'родитель', dataIndex: 'parent'},
-			{header: 'имя', dataIndex: 'name'}
+			{header: 'id', dataIndex: 'id', align: 'right'},
+			{header: 'порядок', dataIndex: 'sequence', align: 'right'},
+			{header: 'тип данных', dataIndex: 'folder', renderer: folderFormat, align: 'center'},
+			{header: 'родитель', dataIndex: 'parent', align: 'right'},
+			{header: 'имя', dataIndex: 'name', align: 'right'}
 		],
 		dockedItems: [{
 	       	xtype: 'pagingtoolbar',

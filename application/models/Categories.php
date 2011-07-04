@@ -70,5 +70,20 @@ class Application_Model_Categories extends Zend_Db_Table
 				->query();
 		return $this->jsonEncode($stmt->fetchAll());
 	}
+
+	/**
+	 * Получение списка категорий определенного типа (файлы или папки)
+	 *
+	 * @param integer $type
+	 * @return string
+	 */
+	public function getCategoriesListType($type)
+	{
+		$stmt = $this->select()
+				->from($this->_name, array("id","sequence","folder","parent","name"))
+				->where('folder=?', (int)$type)
+				->query();
+		return $this->jsonEncode($stmt->fetchAll());
+	}
 }
 ?>
