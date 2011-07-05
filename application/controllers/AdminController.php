@@ -74,6 +74,7 @@ class AdminController extends Zend_Controller_Action
     {
     	$this->_helper->layout->setLayout('layout-site');
     	$this->view->categoriesListRoot = $this->_categories->getCategoriesListRoot();
+    	$this->view->categoriesListParent = $this->_categories->getCategoriesFolder();
     }
 
     /**
@@ -88,10 +89,32 @@ class AdminController extends Zend_Controller_Action
     	$type = $this->_request->getQuery('type');
     	if (!empty($category))
     		echo $this->_categories->getCategoriesListSpecified($category);
-    	elseif (!isset($type))
+    	elseif (isset($type))
     		echo $this->_categories->getCategoriesListType($type);
     	else
     		echo $this->_categories->viewCategories();
+    }
+
+    /**
+     * Редактирование категорий
+     *
+     */
+    public function categorieseditAction()
+    {
+    	$this->_helper->viewRenderer->setNoRender();
+    	$this->_helper->layout->disableLayout();
+    	echo ($this->_categories->editCategories($this->_request)) ? 'Изменения сохранены' : 'Ошибка сохранения изменений';
+    }
+
+    /**
+     * Добавление категорий
+     *
+     */
+    public function categoriesaddAction()
+    {
+    	$this->_helper->viewRenderer->setNoRender();
+    	$this->_helper->layout->disableLayout();
+    	echo ($this->_categories->addCategories($this->_request)) ? 'Изменения сохранены' : 'Ошибка сохранения изменений';
     }
 }
 

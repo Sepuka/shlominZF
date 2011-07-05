@@ -57,6 +57,25 @@ class Application_Model_Categories extends Zend_Db_Table
 	}
 
 	/**
+	 * Получение списка категорий которые могут быть родителями
+	 *
+	 * @return string
+	 */
+	public function getCategoriesFolder()
+	{
+		$stmt = $this->select()
+				->distinct()
+				->from($this->_name, 'name')
+				->where('folder=1')
+				->order('name ASC')
+				->query();
+		$output = array();
+		foreach ($stmt->fetchAll() as $value)
+			$output[] = sprintf('["%s","%s"]', $value['name'], $value['name']);
+		return sprintf('[%s]', implode(',', $output));
+	}
+
+	/**
 	 * Получение подкатегорий указанной категории
 	 *
 	 * @param string $category
@@ -84,6 +103,57 @@ class Application_Model_Categories extends Zend_Db_Table
 				->where('folder=?', (int)$type)
 				->query();
 		return $this->jsonEncode($stmt->fetchAll());
+	}
+
+	/**
+	 * Редактирование категорий
+	 *
+	 * @param array $data
+	 * @return integer
+	 */
+	public function editCategories($data)
+	{
+		$id = $data->getPost('id');
+		$sequence = $data->getPost('sequence');
+		$folder = $data->getPost('folder');
+		$parent = $data->getPost('parent');
+		$name = $data->getPost('name');
+		if (!isset($id) || !isset($sequence) || !isset($folder) || !isset($parent) || !isset($name))
+			return 0;
+		else {
+			$where = sprintf('id = %d', $id);
+			return $this->update(
+				array(
+					'sequence'	=> $sequence,
+					'folder' 	=> $folder,
+					'parent' 	=> $parent,
+					'name' 		=> $name),
+				$where
+			);
+		}
+	}
+
+	/**
+	 * Добавление категорий
+	 *
+	 * @param array $data
+	 * @return integer
+	 */
+	public function addCategories($data)
+	{
+		$folder = $data->getPost('folder');
+		$parent = $data->getPost('parent');
+		$name = $data->getPost('name');
+		if (!isset($folder) || !isset($parent) || !isset($name))
+			return 0;
+		else {
+			return $this->insert(
+				array(
+					'folder' 	=> $folder,
+					'parent' 	=> $parent,
+					'name' 		=> $name)
+			);
+		}
 	}
 }
 ?>

@@ -1,5 +1,8 @@
 <script language="javascript" type="text/javascript">
 Ext.onReady(function() {
+	var URLcategoriesAll = '/admin/categoriesView';
+	var URLcategoriesEdit = '/admin/categoriesEdit';
+	var URLcategoriesAdd = '/admin/categoriesAdd';
 
 	var loadMaskGrid = new Ext.LoadMask(
 	    Ext.getBody(),
@@ -24,8 +27,6 @@ Ext.onReady(function() {
 		]
 	});
 
-	var URLcategoriesAll = '/admin/categoriesView';
-
 	var store = new Ext.data.Store({
 		autoLoad: true,
 		model: 'dataModel',
@@ -37,7 +38,97 @@ Ext.onReady(function() {
         		root: 'categories',
         		totalProperty: 'total'
 			}
+		},
+		listeners: {
+			'update': function(obj, record, operation, opt) {
+				loadMaskGrid.show();
+				Ext.Ajax.request({
+					url: URLcategoriesEdit,
+                    method: 'POST',
+                    params: {
+                        id: record.data['id'],
+                        sequence: record.data['sequence'],
+                        folder: record.data['folder'],
+                        parent: record.data['parent'],
+                        name: record.data['name']
+                    },
+                    success: function(answer) {
+                    	loadMaskGrid.hide();
+                        //alert(answer.responseText);
+                    },
+                    failure: function() {
+                    	loadMaskGrid.hide();
+                        Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+                    }
+				});
+			}
 		}
+	});
+
+	var newCategory = Ext.create('Ext.window.Window', {
+		title: "Создание новой категории или статьи",
+		defaultType: 'textfield',
+		width: 400,
+        height: 220,
+        items: [
+            {
+                xtype: 'combo',
+                fieldLabel: 'категория (родитель)',
+                store: <?=$this->categoriesListParent?>,
+                width: 380,
+                labelWidth: 150,
+                itemId: 'parent'
+            },{
+                fieldLabel: 'подкатегория (потомок)',
+                width: 380,
+                labelWidth: 150,
+                itemId: 'name'
+            },{
+                xtype: 'combo',
+                fieldLabel: 'тип ресурса',
+                mode: 'local',
+                emptyText: 'файл/статья',
+                store: [["0","файл/статья"],["1","папка"]],
+                width: 380,
+                labelWidth: 150,
+                itemId: 'folder'
+            },{
+                xtype: 'container',
+                html: 'Чтобы создать КОРНЕВУЮ директорию, напишите ее имя в поле "подкатегория (потомок)", а поле "категория (родитель)" оставьте пустым. Вы также можете создать категорию-потомок от не существующей категории-родителя, впишите их имена в соответствующие поля и они будут созданы за одно действие.'
+            }],
+		buttons:
+        [
+            {
+                text: 'Создать новый ресурс',
+                handler: function() {
+                    newCategory.hide();
+                    loadMaskGrid.show();
+                    Ext.Ajax.request({
+                        url: URLcategoriesAdd,
+                        method: 'POST',
+                        params: {
+                            parent: newCategory.getComponent('parent').getValue(),
+                            name: newCategory.getComponent('name').getValue(),
+                            folder: newCategory.getComponent('folder').getValue()
+                        },
+                        success: function(answer) {
+                            //alert(answer.responseText);
+                            loadMaskGrid.hide();
+                            store.load();
+                        },
+                        failure: function() {
+                            Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+                            loadMaskGrid.hide();
+                        }
+                    })
+                }
+            },{
+                text: 'Закрыть окно',
+                handler: function() {
+                    newCategory.hide();
+                }
+            }
+        ]
 	});
 
 	var menu = new Ext.Panel({
@@ -45,9 +136,13 @@ Ext.onReady(function() {
         defaults: {
         	width: 190
         },
+        style: {
+			textAlign: 'center',
+            display: 'block'
+		},
         items: [
         	new Ext.form.Label({
-                html: 'список корневых категорий'
+                html: 'Список корневых категорий'
         	}),
         	new Ext.form.field.ComboBox({
         		store: <?=$this->categoriesListRoot?>,
@@ -60,7 +155,7 @@ Ext.onReady(function() {
         		}
         	}),
 			new Ext.form.Label({
-                html: 'показать только'
+                html: 'Показать только тип'
         	}),
         	new Ext.form.field.ComboBox({
         		store: [[0, "статьи"], [1, "папки"]],
@@ -77,16 +172,45 @@ Ext.onReady(function() {
 
 	var grid = Ext.create('Ext.grid.Panel', {
 		title: 'Редактирование категорий/подкатегорий сайта',
-		loadMask: loadMaskGrid,
 		store: store,
-		sortableColumns: false,
 		columns: [
-			{header: 'id', dataIndex: 'id', align: 'right'},
-			{header: 'порядок', dataIndex: 'sequence', align: 'right'},
-			{header: 'тип данных', dataIndex: 'folder', renderer: folderFormat, align: 'center'},
-			{header: 'родитель', dataIndex: 'parent', align: 'right'},
-			{header: 'имя', dataIndex: 'name', align: 'right'}
+			{
+				header: 'id',
+				dataIndex: 'id',
+				align: 'right',
+				width: 80
+			},{
+				header: 'порядок',
+				dataIndex: 'sequence',
+				align: 'right',
+				width: 80,
+				field: 'textfield'
+			},{
+				header: 'тип данных',
+				dataIndex: 'folder',
+				renderer: folderFormat,
+				align: 'center',
+				width: 150,
+				field: new Ext.form.field.ComboBox({store:[[0,"файл/статья"],[1,"папка"]]})
+			},{
+				header: 'родитель',
+				dataIndex: 'parent',
+				align: 'right',
+				width: 150,
+				field: 'textfield'
+			},{
+				header: 'имя',
+				dataIndex: 'name',
+				align: 'right',
+				width: 200,
+				field: 'textfield'
+			}
 		],
+		plugins: [
+        	Ext.create('Ext.grid.plugin.CellEditing', {
+	            clicksToEdit: 1
+    	    })
+    	],
 		dockedItems: [{
 	       	xtype: 'pagingtoolbar',
 	       	store: store,
@@ -94,13 +218,16 @@ Ext.onReady(function() {
 			displayInfo: true
 		}],
 		buttons: [{
-			text: 'создать новый раздел'
+			text: 'создать новый раздел',
+			handler: function() {
+				newCategory.show();
+			}
 		},{
 			text: 'удалить выбранный раздел'
 		},{
 			text: 'показать все разделы',
 			handler: function() {
-                store.load();
+                store.load({url:URLcategoriesAll});
             }
 		}]
 	});
