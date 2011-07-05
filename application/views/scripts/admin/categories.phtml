@@ -3,6 +3,8 @@ Ext.onReady(function() {
 	var URLcategoriesAll = '/admin/categoriesView';
 	var URLcategoriesEdit = '/admin/categoriesEdit';
 	var URLcategoriesAdd = '/admin/categoriesAdd';
+	var URLcategoriesDel = '/admin/categoriesDel';
+	var currentRowGrid = 0;
 
 	var loadMaskGrid = new Ext.LoadMask(
 	    Ext.getBody(),
@@ -15,6 +17,30 @@ Ext.onReady(function() {
 		if (f == 0) return 'файл/статья';
         if (f == 1) return 'папка';
 	}
+
+    // Функция отправки данных для удаления
+    function confirmDelete(btn) {
+        if (btn == 'yes') {
+            loadMaskGrid.show();
+            Ext.Ajax.request({
+                url: URLcategoriesDel,
+                method: 'POST',
+                params: {
+                    id: currentRowGrid
+                },
+                success: function(answer) {
+                    alert(answer.responseText);
+                    loadMaskGrid.hide();
+                    store.load();
+                    currentRowGrid = 0;
+                },
+                failure: function() {
+                	loadMaskGrid.hide();
+                    Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+                }
+            })
+        }
+    }
 
 	Ext.define('dataModel', {
 	   	extend: 'Ext.data.Model',
@@ -223,13 +249,25 @@ Ext.onReady(function() {
 				newCategory.show();
 			}
 		},{
-			text: 'удалить выбранный раздел'
+			text: 'удалить выбранный раздел',
+			handler: function() {
+				if (currentRowGrid == 0)
+                    Ext.MessageBox.alert('Ошибка', 'Необходимо выбрать строку для удаления!');
+                else {
+                    Ext.MessageBox.confirm('Подтверждение выполнения', 'Вы действительно хотите удалить выделенную запись?', confirmDelete);
+                }
+			}
 		},{
 			text: 'показать все разделы',
 			handler: function() {
                 store.load({url:URLcategoriesAll});
             }
-		}]
+		}],
+		listeners: {
+			'itemclick' : (function(obj, record, item, index, event, opt) {
+				currentRowGrid = record.data['id'];
+			})
+		}
 	});
 
 	var viewport = Ext.create('Ext.container.Viewport', {

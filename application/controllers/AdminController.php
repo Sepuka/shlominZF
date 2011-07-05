@@ -116,5 +116,16 @@ class AdminController extends Zend_Controller_Action
     	$this->_helper->layout->disableLayout();
     	echo ($this->_categories->addCategories($this->_request)) ? 'Изменения сохранены' : 'Ошибка сохранения изменений';
     }
+
+    /**
+     * Добавление категорий
+     *
+     */
+    public function categoriesdelAction()
+    {
+    	$this->_helper->viewRenderer->setNoRender();
+    	$this->_helper->layout->disableLayout();
+    	echo ($this->_categories->delCategories($this->_request)) ? 'Категория успешно удалена' : 'Ошибка удаления категории';
+    }
 }
 

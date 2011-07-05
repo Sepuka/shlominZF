@@ -155,5 +155,22 @@ class Application_Model_Categories extends Zend_Db_Table
 			);
 		}
 	}
+
+	/**
+	 * Удаление категорий
+	 *
+	 * @param array $data
+	 * @return integer
+	 */
+	public function delCategories($data)
+	{
+		$id = $data->getPost('id');
+		if (empty($id))
+			return 0;
+		else {
+			$where = sprintf('id = %d', $id);
+			return $this->delete($where);
+		}
+	}
 }
 ?>
