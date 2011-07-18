@@ -68,17 +68,19 @@ class AdminController extends Zend_Controller_Action
 
     /**
      * Просмотр категорий и действий над ними
+     * 
+     * Действие отображает страницу работы с категориями
      *
      */
     public function categoriesAction()
     {
-    	$this->_helper->layout->setLayout('layout-site');
+    	$this->_helper->layout->setLayout('layout-admin-pages');
     	$this->view->categoriesListRoot = $this->_categories->getCategoriesListRoot();
     	$this->view->categoriesListParent = $this->_categories->getCategoriesFolder();
     }
 
     /**
-     * Получение списка категорий для таблици в формате JSON
+     * Получение списка категорий для таблицы в формате JSON
      *
      */
     public function categoriesviewAction()
@@ -118,7 +120,7 @@ class AdminController extends Zend_Controller_Action
     }
 
     /**
-     * Добавление категорий
+     * Удаление категорий
      *
      */
     public function categoriesdelAction()

@@ -196,6 +196,7 @@ Ext.onReady(function() {
         ]
 	});
 
+	// Таблица управления категориями
 	var grid = Ext.create('Ext.grid.Panel', {
 		title: 'Редактирование категорий/подкатегорий сайта',
 		store: store,
@@ -276,7 +277,7 @@ Ext.onReady(function() {
 			region: 'west',
 			itemId: 'westMenuPanel',
 			width: 200,
-			items: menu
+			items: [menu, navigation]
 		},{
 			region: 'center',
 			itemId: 'centerMenuPanel',

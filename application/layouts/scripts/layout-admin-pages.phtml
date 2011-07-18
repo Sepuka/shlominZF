@@ -4,7 +4,8 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <?=$this->headTitle()?>
   <?=$this->headLink()->appendStylesheet('/ext-4.0.2/resources/css/ext-all.css')?>
-  <?=$this->headScript()->appendFile('/ext-4.0.2/bootstrap.js')?>
+  <?=$this->headScript()->appendFile('/ext-4.0.2/bootstrap.js')
+  						->appendFile('/js/adminNavigation.js')?>
 </head>
 <body><?=$this->layout()->content?></body>
 </html>
