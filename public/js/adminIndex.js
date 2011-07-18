@@ -23,6 +23,10 @@ Ext.onReady(function() {
 	ArticlesIcon.setTitle('Статьи');
 	ArticlesIcon.update('Редактирование статей сайта');
 
+	var BackupIcon = new Ext.create('Ext.window.Window', AbstractIcon);
+	BackupIcon.setTitle('Настройка архивирования');
+	BackupIcon.update('Создание и редактирование правил для работы с бекапами');
+
 	var viewport = new Ext.create('Ext.container.Viewport', {
 		layout: 'border',
 		renderTo: Ext.getBody(),
@@ -38,7 +42,8 @@ Ext.onReady(function() {
 			title: 'Разделы панели администрирования',
 			items: [
 				CategoriesIcon,
-				ArticlesIcon
+				ArticlesIcon,
+				BackupIcon
 			]
 		}]
 	});
@@ -58,6 +63,8 @@ Ext.onReady(function() {
 		}
 		return coordinateX;
 	};
+	// Установка координат для окон
 	CategoriesIcon.setPosition(getCoordinateX(), coordinateY, false);
 	ArticlesIcon.setPosition(getCoordinateX(), coordinateY, false);
+	BackupIcon.setPosition(getCoordinateX(), coordinateY, false);
 });
