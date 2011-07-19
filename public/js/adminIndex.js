@@ -22,6 +22,13 @@ Ext.onReady(function() {
 	var ArticlesIcon = new Ext.create('Ext.window.Window', AbstractIcon);
 	ArticlesIcon.setTitle('Статьи');
 	ArticlesIcon.update('Редактирование статей сайта');
+	ArticlesIcon.addListener('activate', function(self, opt) {
+		if (self.firstShow) {
+			self.firstShow--;
+		} else {
+			window.location = '/admin/articles';
+		}
+	});
 
 	var BackupIcon = new Ext.create('Ext.window.Window', AbstractIcon);
 	BackupIcon.setTitle('Настройка архивирования');

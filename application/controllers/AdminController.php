@@ -7,6 +7,7 @@ class AdminController extends Zend_Controller_Action
 {
 	protected $_ACL			=	null;	# Указатель на объект ACL
 	protected $_categories	=	null;	# Указатель на объект модели категорий
+	protected $_articles	=	null;	# Указатель на объект модели статей
 
     public function init()
     {
@@ -14,6 +15,8 @@ class AdminController extends Zend_Controller_Action
     	$this->_ACL = new Application_Model_Acl();
     	# Подключение модели для работы с категориями
     	$this->_categories = new Application_Model_Categories();
+    	# Подключение модели для работы со статьями
+    	$this->_articles = new Application_Model_Articles();
     }
 
     /**
@@ -64,6 +67,35 @@ class AdminController extends Zend_Controller_Action
     	setcookie('auth', null, 0, '/');
     	session_destroy();
     	$this->_redirect('/');
+    }
+
+    /**
+     * Просмотр статей и действия над ними
+     * 
+     * Действие отображает страницу для работы со статьями
+     *
+     */
+    public function articlesAction()
+    {
+    	$this->_helper->layout->setLayout('layout-admin-pages');
+    }
+
+    /**
+     * Сохранение статей
+     *
+     */
+    public function articlessaveAction()
+    {
+    	$this->_helper->viewRenderer->setNoRender();
+    	$this->_helper->layout->disableLayout();
+    	echo ($this->_articles->updateArticle($this->_request)) ? 'Данные успешно сохранены' : 'Ошибка сохранения данных';
+    }
+
+    public function articlesviewAction()
+    {
+    	$this->_helper->viewRenderer->setNoRender();
+    	$this->_helper->layout->disableLayout();
+    	echo $this->_articles->getTreeArticles();
     }
 
     /**
