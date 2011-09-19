@@ -172,5 +172,25 @@ class Application_Model_Categories extends Zend_Db_Table
 			return $this->delete($where);
 		}
 	}
+
+	/**
+	 * Поиск неверных категорий
+	 * 
+	 * Ищет некорневые категории неимеющие родителя
+	 *
+	 * @return string
+	 */
+	public function getWarningsCategories()
+	{
+		$stmt = $this->select()
+				->distinct()
+				->from($this->_name, 'parent')
+				->where('parent NOT IN (SELECT DISTINCT `name` FROM `categories`)')
+				->where('parent != ""')
+				->query();
+		for($i = 0, $warnings = array(), $result = $stmt->fetchAll(); $i < count($result); $i++)
+			$warnings[] = $result[$i]['parent'];
+		return sprintf('"%s"', (empty($warnings)) ? 'Проблемных категорий нет' : implode(',', $warnings));
+	}
 }
 ?>

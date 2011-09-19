@@ -22,13 +22,15 @@ class AdminController extends Zend_Controller_Action
     /**
      * Преддиспетчер
      *
+     * Проверяет права пользователя и перенаправляет на страницу входа если требуется
      */
     public function preDispatch()
     {
+    	$client = $this->_ACL->getClient();
     	// Перенаправление на login для авторизации
     	if ($this->getRequest()->getActionName() != 'login')
-    		if (!$this->_ACL->isAllowed($this->_ACL->role, 'admin', 'view'))
-				$this->_redirect('admin/login');
+    		if (! $this->_ACL->isAllowed($client->role, 'admin', 'view'))
+				return $this->getResponse()->setRedirect('admin/login');
     }
 
     /**
@@ -37,9 +39,6 @@ class AdminController extends Zend_Controller_Action
      */
     public function indexAction()
     {
-    	if (!$this->_ACL->isAllowed($this->_ACL->role, 'admin', 'view'))
-        	$this->_redirect('admin/login');
-
         $this->_helper->layout->setLayout('layout-admin');
     }
 
@@ -49,9 +48,12 @@ class AdminController extends Zend_Controller_Action
      */
     public function loginAction()
     {
-    	$this->_ACL->login($this->_request);
-    	if ($this->_ACL->isAllowed($this->_ACL->role, 'admin', 'view'))
-			$this->_redirect('admin');
+    	if ($this->getRequest()->isPost())
+    		$this->_ACL->login($this->getRequest());
+    	$client = $this->_ACL->getClient();
+    	# Если права появились - перекидываем клиента в админку
+    	if ($this->_ACL->isAllowed($client->role, 'admin', 'view'))
+			return $this->getResponse()->setRedirect('/admin');
 
     	$this->_helper->layout->setLayout('layout-admin-login');
     	if ($this->_ACL->wrongData)
@@ -65,8 +67,9 @@ class AdminController extends Zend_Controller_Action
     public function logoutAction()
     {
     	setcookie('auth', null, 0, '/');
-    	session_destroy();
-    	$this->_redirect('/');
+    	#session_destroy();
+    	$this->_ACL->destroySession();
+    	$this->getResponse()->setRedirect('/');
     }
 
     /**
@@ -78,6 +81,7 @@ class AdminController extends Zend_Controller_Action
     public function articlesAction()
     {
     	$this->_helper->layout->setLayout('layout-admin-pages');
+    	$this->view->warnings = $this->_categories->getWarningsCategories();
     }
 
     /**

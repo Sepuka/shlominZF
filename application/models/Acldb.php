@@ -3,7 +3,7 @@
  * Класс для работы с таблицей контроля доступа acl
  *
  */
-class Application_Model_Acldb extends Zend_Db_Table
+class Application_Model_Acldb extends Zend_Db_Table_Abstract
 {
 	// Таблица базы данных
 	protected $_name	= 'acl';
@@ -11,56 +11,59 @@ class Application_Model_Acldb extends Zend_Db_Table
 	protected $_primary	= 'login';
 
 	/**
+	 * Получение сущности клиента по первичному ключу
+	 *
+	 * @param string $login
+	 * @return Zend_Db_Table_Row
+	 */
+	public static function get($user)
+	{
+		$model = new Application_Model_Acldb();
+		return $model->find($login)->current();
+	}
+
+	public static function create()
+	{
+		$model = new Application_Model_Acldb();
+		return $model->createRow();
+	}
+
+	/**
 	 * Идентификация и аутентификация
-	 * 
-	 * Возвращает строку содержащую роль текущего пользователя
 	 *
 	 * @param string $login
 	 * @param string $hash
-	 * @return string
+	 * @return Zend_Db_Table_Row | null
 	 */
-	function authentication($login, $hash)
+	public static function authentication($login, $hash)
 	{
-		$stmt = $this->select()
-				->from($this->_name, 'role')
+		$model = new Application_Model_Acldb();
+		$stmt = $model->select()
 	    		->where('login=?', $login)
 	    		->where('hash=?', $hash)
 	    		->query();
-		return $stmt->fetchColumn();
+		if ($res = $stmt->fetch())
+			return $model->find($res['login'])->current();
+		else
+			return null;
 	}
 
 	/**
-	 * Авторизация
-	 * 
-	 * Возвращает массив вида array('login'=>'Логин пользователя', 'role'=>'Его роль')
+	 * Авторизация по уникальному хешу из cookie
 	 *
 	 * @param string $auth
-	 * @return array
+	 * @return Zend_Db_Table_Row
 	 */
-	function authorization($auth)
+	public static function authorization($auth)
 	{
-		$stmt = $this->select()
-				->from($this->_name, array('login', 'role'))
+		$model = new Application_Model_Acldb();
+		$stmt = $model->select()
 				->where('cookie=?', $auth)
 				->query();
-		return ($data = $stmt->fetchAll()) ? $data[0] : array('login' => null, 'role' => 'guest');
-	}
-
-	/**
-	 * Устанавливает идентификационный токен для пользователя
-	 * 
-	 * Токен используется для передачи в cookie
-	 *
-	 * @param string $login
-	 * @param string $auth
-	 * @return integer
-	 */
-	function setAuthToken($login, $auth)
-	{
-		return $this->update(
-			array('cookie' => $auth),
-			"`login`='{$login}'"
-		);
+		if ($res = $stmt->fetch())
+			return $model->find($res['login'])->current();
+		else
+			return $model->createRow();
 	}
 }
 ?>
