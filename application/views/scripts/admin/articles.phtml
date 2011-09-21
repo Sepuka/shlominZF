@@ -1,0 +1,124 @@
+<script language="javascript" type="text/javascript">
+Ext.require([
+    'Ext.tree.*',
+    'Ext.data.*'
+]);
+Ext.onReady(function() {
+	// переменная хранит идентификатор текущей статьи
+	var articleID = 0;
+
+	var URLarticlesSave = '/admin/articlesSave';
+	var URLarticlesView = '/admin/articlesView';
+
+	var loadMask = new Ext.LoadMask(
+	    Ext.getBody(),
+	    {
+	        msg: 'Пожалуйста, подождите. Идет загрузка ...'
+	    });
+
+	var editor = Ext.create('Ext.form.HtmlEditor', {
+		
+	});
+
+	var warning = Ext.create('Ext.panel.Panel', {
+		title: 'Возможные проблемы',
+		html: <?=$this->warnings?>
+	});
+
+	Ext.define('topDir', {
+		extend: 'Ext.data.Model',
+		fields: ['id', 'text', 'articles'],
+		hasMany: 'subDir'
+	});
+	Ext.define('subDir', {
+		extend: 'Ext.data.Model',
+		fields: ['id', 'text'],
+		belongsTo: 'topDir'
+	});
+
+	var treeArticlesStore = Ext.create('Ext.data.TreeStore', {
+		model: 'topDir',
+		autoLoad: true,
+		proxy: {
+        	type: 'ajax',
+        	url : URLarticlesView,
+        	reader: {
+            	type: 'json',
+            	root: 'articles',
+            	idProperty: 'id'
+        	}
+    	},
+    	root: {
+    		expanded: true,
+    		text: '/'
+    	}
+	});
+
+	// Навигационное дерево статей
+	var treeArticles = Ext.create('Ext.tree.Panel', {
+		store: treeArticlesStore,
+		height: 400,
+		listeners: {
+			'show': function(obj, opt) {
+				alert();
+			}
+		}
+	});
+
+	var toolbar = Ext.create('Ext.toolbar.Toolbar', {
+		items: [{
+			itemId: 'headline',
+			xtype: 'textfield',
+			fieldLabel: 'Заголовок статьи',
+			width: 400
+		},{
+			xtype: 'tbseparator'
+		},{
+			xtype: 'button',
+			text: 'Сохранить',
+			handler: function() {
+				loadMask.show();
+				Ext.Ajax.request({
+					url: URLarticlesSave,
+					method: 'POST',
+                    params: {
+                        article: editor.getValue(),
+                        headline: toolbar.getComponent('headline').getValue()
+                    },
+                    success: function(answer) {
+                    	loadMask.hide();
+                        //alert(answer.responseText);
+                    },
+                    failure: function() {
+                    	loadMask.hide();
+                        Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+                    }
+				})
+			}
+		},{
+			xtype: 'button',
+			text: 'Обновить'
+		},{
+			xtype: 'button',
+			text: 'Удалить'
+		}]
+	});
+
+	var viewport = Ext.create('Ext.container.Viewport', {
+		layout: 'border',
+		items: [{
+			region: 'west',
+			itemId: 'westMenuPanel',
+			width: 200,
+			items: [navigation, warning, treeArticles]
+		},{
+			region: 'center',
+			itemId: 'centerMenuPanel',
+			items: editor,
+			bbar: toolbar
+		}]
+	});
+	editor.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
+	editor.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
+});
+</script>

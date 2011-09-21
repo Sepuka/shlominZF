@@ -8,6 +8,8 @@ class AdminController extends Zend_Controller_Action
 	protected $_ACL			=	null;	# Указатель на объект ACL
 	protected $_categories	=	null;	# Указатель на объект модели категорий
 	protected $_articles	=	null;	# Указатель на объект модели статей
+	protected $_session		=	null;	# Указатель на объект сессии Zend_Session_Namespace
+	protected $_config		=	null;	# Массив конфигурации
 
     public function init()
     {
@@ -17,6 +19,9 @@ class AdminController extends Zend_Controller_Action
     	$this->_categories = new Application_Model_Categories();
     	# Подключение модели для работы со статьями
     	$this->_articles = new Application_Model_Articles();
+    	# Запускаем сессию для авторизации
+    	$this->_session =  new Zend_Session_Namespace();
+    	$this->_config = new Zend_Config_Ini(CONFIG_FILE, APPLICATION_ENV);
     }
 
     /**
@@ -26,11 +31,14 @@ class AdminController extends Zend_Controller_Action
      */
     public function preDispatch()
     {
-    	$client = $this->_ACL->getClient();
     	// Перенаправление на login для авторизации
-    	if ($this->getRequest()->getActionName() != 'login')
-    		if (! $this->_ACL->isAllowed($client->role, 'admin', 'view'))
-				return $this->getResponse()->setRedirect('admin/login');
+    	if ($this->getRequest()->getActionName() != 'login') {
+    		$auth = Zend_Auth::getInstance();
+    		if (! $auth->hasIdentity())
+    			return $this->getResponse()->setRedirect('/admin/login');
+    		if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'view'))
+				return $this->getResponse()->setRedirect('/admin/login');
+    	}
     }
 
     /**
@@ -48,16 +56,40 @@ class AdminController extends Zend_Controller_Action
      */
     public function loginAction()
     {
-    	if ($this->getRequest()->isPost())
-    		$this->_ACL->login($this->getRequest());
-    	$client = $this->_ACL->getClient();
-    	# Если права появились - перекидываем клиента в админку
-    	if ($this->_ACL->isAllowed($client->role, 'admin', 'view'))
-			return $this->getResponse()->setRedirect('/admin');
+    	if ($this->getRequest()->isPost()) {
+    		Zend_Loader::loadClass('Zend_Auth_Adapter_DbTable');
+    		$authAdapter = new Zend_Auth_Adapter_DbTable();
+    		$authAdapter->setTableName('acl');
+    		$authAdapter->setIdentityColumn('login');
+    		$authAdapter->setCredentialColumn('hash');
+    		$authAdapter->setIdentity($this->getRequest()->getPost('login'));
+    		$authAdapter->setCredential(md5($this->getRequest()->getPost('password') . $this->_config->salt));
+    		$auth = Zend_Auth::getInstance();
+    		$authResult = $auth->authenticate($authAdapter);
 
+    		if ($authResult->isValid()) {
+    			$user = Application_Model_Acldb::get($authResult->getIdentity());
+    			$this->_session->role = $user->role;
+    			if ($this->getRequest()->getPost('saveme'))
+    				Zend_Session::rememberMe();
+    			$this->getResponse()->setRedirect('/admin');
+    		} else {
+    			switch ($authResult->getCode()) {
+    				case Zend_Auth_Result::FAILURE_IDENTITY_NOT_FOUND:
+    					$this->view->wrongData = 'Пользователя с таким логином не существует';
+    				break;
+
+    				case Zend_Auth_Result::FAILURE_CREDENTIAL_INVALID:
+    					$this->view->wrongData = 'Некорректно введены данные';
+    				break;
+
+					default:
+						$this->view->wrongData = 'Ошибка входа';
+    				break;
+    			}
+    		}
+    	}
     	$this->_helper->layout->setLayout('layout-admin-login');
-    	if ($this->_ACL->wrongData)
-    		$this->view->wrongData = true;
     }
 
     /**
@@ -66,9 +98,8 @@ class AdminController extends Zend_Controller_Action
      */
     public function logoutAction()
     {
-    	setcookie('auth', null, 0, '/');
-    	#session_destroy();
-    	$this->_ACL->destroySession();
+    	Zend_Auth::getInstance()->clearIdentity();
+    	Zend_Session::destroy();
     	$this->getResponse()->setRedirect('/');
     }
 

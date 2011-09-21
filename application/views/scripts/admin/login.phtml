@@ -1,5 +1,1 @@
-<? if ($this->wrongData): ?>
-<script language="javascript" type="text/javascript">var wrongDataMsg = 'Вы ошиблись при заполнении данных для входа';</script>
-<? else: ?>
-<script language="javascript" type="text/javascript">var wrongDataMsg = '';</script>
-<? endif; ?>
+<script language="javascript" type="text/javascript">var wrongDataMsg = '<?=$this->wrongData?>';</script>
