@@ -147,21 +147,30 @@ class AdminController extends Zend_Controller_Action
     }
 
     /**
-     * Получение списка категорий для таблицы в формате JSON
+     * Получение списка категорий для таблицы в формате JSON через AJAX
      *
      */
     public function categoriesviewAction()
     {
+    	if (! $this->getRequest()->isGet())
+    		return $this->getResponse()->setHttpResponseCode(415);
+    	if (! $this->getRequest()->isXmlHttpRequest())
+    		return $this->getResponse()->setHttpResponseCode(415);
+
     	$this->_helper->viewRenderer->setNoRender();
-    	$this->_helper->layout->disableLayout();
-    	$category = $this->_request->getQuery('category');
-    	$type = $this->_request->getQuery('type');
-    	if (!empty($category))
-    		echo $this->_categories->getCategoriesListSpecified($category);
+	    $this->_helper->layout->disableLayout();
+
+    	$category = $this->getRequest()->getQuery('category');
+    	$type = $this->getRequest()->getQuery('type');
+    	if (! empty($category))
+    		$answer = $this->_categories->getCategoriesListSpecified($category);
     	elseif (isset($type))
-    		echo $this->_categories->getCategoriesListType($type);
+    		$answer = $this->_categories->getCategoriesListType($type);
     	else
-    		echo $this->_categories->viewCategories();
+    		$answer = $this->_categories->getCategories();
+    	$this->getResponse()
+			->setHeader('Content-Type', 'application/json; charset=UTF-8')
+			->appendBody($answer);
     }
 
     /**
@@ -170,9 +179,20 @@ class AdminController extends Zend_Controller_Action
      */
     public function categorieseditAction()
     {
+    	if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+
     	$this->_helper->viewRenderer->setNoRender();
-    	$this->_helper->layout->disableLayout();
-    	echo ($this->_categories->editCategories($this->_request)) ? 'Изменения сохранены' : 'Ошибка сохранения изменений';
+	    $this->_helper->layout->disableLayout();
+
+    	try {
+    		$this->_categories->editCategories($this->getRequest());
+    	} catch (CategoriesException $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(500);
+    	}
+    	$this->getResponse()
+    		->setHttpResponseCode(204);
     }
 
     /**
@@ -181,9 +201,20 @@ class AdminController extends Zend_Controller_Action
      */
     public function categoriesaddAction()
     {
+    	if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+
     	$this->_helper->viewRenderer->setNoRender();
-    	$this->_helper->layout->disableLayout();
-    	echo ($this->_categories->addCategories($this->_request)) ? 'Изменения сохранены' : 'Ошибка сохранения изменений';
+	    $this->_helper->layout->disableLayout();
+
+    	try {
+    		$this->_categories->addCategories($this->getRequest());
+    	} catch (CategoriesException $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(500);
+    	}
+    	$this->getResponse()
+    		->setHttpResponseCode(204);
     }
 
     /**
@@ -192,9 +223,19 @@ class AdminController extends Zend_Controller_Action
      */
     public function categoriesdelAction()
     {
+    	if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+
     	$this->_helper->viewRenderer->setNoRender();
     	$this->_helper->layout->disableLayout();
-    	echo ($this->_categories->delCategories($this->_request)) ? 'Категория успешно удалена' : 'Ошибка удаления категории';
+    	try {
+    		$this->_categories->delCategories($this->_request);
+    	} catch (CategoriesException $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(500);
+    	}
+    	$this->getResponse()
+    		->setHttpResponseCode(204);
     }
 }
 

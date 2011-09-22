@@ -29,14 +29,14 @@ Ext.onReady(function() {
                     id: currentRowGrid
                 },
                 success: function(answer) {
-                    alert(answer.responseText);
+                    //alert(answer.responseText);
                     loadMaskGrid.hide();
                     store.load();
                     currentRowGrid = 0;
                 },
                 failure: function() {
                 	loadMaskGrid.hide();
-                    Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+                    Ext.Msg.alert("Ошибка", "Ошибка удаления записи");
                 }
             })
         }
@@ -84,7 +84,7 @@ Ext.onReady(function() {
                     },
                     failure: function() {
                     	loadMaskGrid.hide();
-                        Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+                        Ext.Msg.alert("Ошибка", 'Не удалось обновить данные');
                     }
 				});
 			}
@@ -143,7 +143,7 @@ Ext.onReady(function() {
                             store.load();
                         },
                         failure: function() {
-                            Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+                            Ext.Msg.alert("Ошибка", "Ошибка создания ресурса");
                             loadMaskGrid.hide();
                         }
                     })
