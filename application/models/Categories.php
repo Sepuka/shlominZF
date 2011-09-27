@@ -1,5 +1,5 @@
 <?php
-class CategoriesException extends Exception {}
+class Categories_Exception extends Exception {}
 
 /**
  * Модель для работы с категориями (разделами)
@@ -7,10 +7,18 @@ class CategoriesException extends Exception {}
  */
 class Application_Model_Categories extends Zend_Db_Table_Abstract
 {
-	// Таблица базы данных
-	protected $_name	= 'categories';
-	// Первичный ключ
-	protected $_primary	= 'id';
+	protected $_name			= 'categories';
+	protected $_primary			= 'id';
+	protected $_dependentTables	= array('Application_Model_Articles');
+	protected $_referenceMap	= array(
+		# Связь родителей и детей в категориях
+		'parentCategory' => array(
+			'columns'		=> 'name',
+			'refTableClass'	=> 'Application_Model_Categories',
+			'refColumns'	=> 'parent',
+			'onDelete'		=> 'cascade',
+			'onUpdate'		=> 'cascade'
+		));
 
 	/**
 	 * Приведение массива к json
@@ -26,6 +34,58 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	}
 
 	/**
+	 * Конвертирует результат выборки в строку
+	 * Возвращает строку вида [["name1","name1"],["name2","name2"], ...]
+	 * для использования в html элементе select
+	 * 
+	 * @param Zend_Db_Statement $stmt
+	 * @return string
+	 */
+	public static function stmt2selectEncode($stmt, $key='id', $name='value')
+	{
+		if (! $stmt instanceof Zend_Db_Statement)
+			throw new Categories_Exception('stmt2selectEncode ожидает Zend_Db_Statement');
+		$output = array();
+		foreach ($stmt->fetchAll() as $value)
+			$output[] = sprintf('["%s","%s"]', $value[$key], $value[$name]);
+		return sprintf('[%s]', implode(',', $output));
+	}
+
+	/**
+	 * Получение дерева статей и категорий
+	 *
+	 * @param string $parent
+	 * @param inteher $articleID
+	 * @return array
+	 */
+	public function getCategoriesTree($parent='', $articleID=0)
+	{
+		$tree = array();
+		$select = $this->select()->where('parent=?', $parent);
+		# Получаем папки нужной категории
+		foreach ($this->fetchAll($select) as $row) {
+			$tree[] = array(
+                'id'		=> $row['id'],
+				'text'		=> $row['name'],
+				'expanded'	=> false,
+				'articles'	=> $this->getCategoriesTree($row['name'], $row['id']));
+		}
+		# Получаем статьи нужной категории
+		$stmt = $this->getAdapter()
+		      ->select()
+		      ->from('articles', array('id', 'headline'))
+		      ->where('category=?', $articleID, Zend_Db::INT_TYPE)
+		      ->query();
+		foreach ($stmt->fetchAll() as $row) {
+			$tree[] = array(
+				'id'	=> $row['id'],
+				'text'	=> $row['headline'],
+				'leaf'	=> true);
+		}
+		return $tree;
+	}
+
+	/**
 	 * Получение списка всех категорий
 	 *
 	 * @return json
@@ -38,23 +98,15 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 
 	/**
 	 * Получение списка корневых категорий
-	 * 
-	 * Возвращает строку вида [["name1","name1"],["name2","name2"], ...]
-	 * для использования в ExtJS
 	 *
-	 * @return string
+	 * @return Zend_Db_Statement
 	 */
-	public function getCategoriesListRoot()
+	public function getCategoriesRoot()
 	{
-		$stmt = $this->select()
-				->from($this->_name, 'name')
+		return $this->select()
 				->where('parent=?', '')
 				->order('name ASC')
 				->query();
-		$output = array();
-		foreach ($stmt->fetchAll() as $value)
-			$output[] = sprintf('["%s","%s"]', $value['name'], $value['name']);
-		return sprintf('[%s]', implode(',', $output));
 	}
 
 	/**

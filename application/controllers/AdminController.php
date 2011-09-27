@@ -126,11 +126,23 @@ class AdminController extends Zend_Controller_Action
     	echo ($this->_articles->updateArticle($this->_request)) ? 'Данные успешно сохранены' : 'Ошибка сохранения данных';
     }
 
+    /**
+     * Получение дерева категорий
+     *
+     * Отдает клиенту дерево категорий в формате json
+     */
     public function articlesviewAction()
     {
+    	if (! $this->getRequest()->isGet())
+    		return $this->getResponse()->setHttpResponseCode(415);
+    	if (! $this->getRequest()->isXmlHttpRequest())
+    		return $this->getResponse()->setHttpResponseCode(415);
+
     	$this->_helper->viewRenderer->setNoRender();
     	$this->_helper->layout->disableLayout();
-    	echo $this->_articles->getTreeArticles();
+    	$this->getResponse()
+			->setHeader('Content-Type', 'application/json; charset=UTF-8')
+			->appendBody($this->_articles->getTreeArticles());
     }
 
     /**
@@ -142,7 +154,8 @@ class AdminController extends Zend_Controller_Action
     public function categoriesAction()
     {
     	$this->_helper->layout->setLayout('layout-admin-pages');
-    	$this->view->categoriesListRoot = $this->_categories->getCategoriesListRoot();
+    	$this->view->categoriesListRoot = Application_Model_Categories::stmt2selectEncode(
+    		$this->_categories->getCategoriesRoot(), 'name', 'name');
     	$this->view->categoriesListParent = $this->_categories->getCategoriesFolder();
     }
 
