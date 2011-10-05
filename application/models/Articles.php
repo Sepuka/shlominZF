@@ -1,4 +1,6 @@
 <?php
+class ArticleException extends Exception {}
+
 class Application_Model_Articles extends Zend_Db_Table_Abstract
 {
 	// Таблица в базе данных
@@ -31,18 +33,62 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
 	}
 
 	/**
+	 * Удаление статьи
+	 *
+	 * @param integer $id
+	 */
+	public function removeArticle($id)
+	{
+        if (empty($id))
+			throw new ArticleException('Ошибка входящих данных');
+		if (is_null($article = $this->find($id)->current())) {
+		    throw new ArticleException('Не найдено статьи с указанным ID');
+		}
+		$article->delete();
+	}
+
+	/**
 	 * Обновление статьи
 	 *
-	 * @param array $data
-	 * @return unknown
+	 * @throws ArticleException
+	 * @param integer $id
+	 * @param string $headline
+	 * @param string $content
+	 * @return void
 	 */
-	public function updateArticle($data)
+	public function updateArticle($id, $headline, $content)
 	{
-		$id = $data->getPost('id');
-		$headline = $data->getPost('headline');
-		$text = $data->getPost('text');
-		if (empty($id) || empty($headline) || empty($text))
-			return 0;
+		if (empty($id) || empty($headline) || empty($content))
+			throw new ArticleException('Ошибка входящих данных');
+		if (is_null($article = $this->find($id)->current())) {
+		    $article = $this->createRow(array(
+                'category'  => $id,
+                'createDate'=> date('Y-m-d H:i:s')
+		    ));
+		}
+		$article->headline = $headline;
+		$article->content = $content;
+		$article->changeDate = date('Y-m-d H:i:s');
+		$article->save();
+	}
+
+	/**
+	 * Получение статьи по идентификатору
+	 *
+	 * @param integer $id
+	 * @return array
+	 */
+	public function getArticleByID($id)
+	{
+	    if ($res = $this->find($id)->current()) {
+	        return array(
+	               'content'   => $res['content'],
+	               'headline'  => $res['headline'],
+	               'createDate'=> $res['createDate'],
+	               'changeDate'=> $res['changeDate']
+	           );
+	    } else
+	       return array('headline'=>'', 'content'=>'?', 'createDate'=>'?', 'changeDate'=>'?');
 	}
 }
 ?>

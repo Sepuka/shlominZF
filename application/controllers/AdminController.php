@@ -11,6 +11,18 @@ class AdminController extends Zend_Controller_Action
 	protected $_session		=	null;	# Указатель на объект сессии Zend_Session_Namespace
 	protected $_config		=	null;	# Массив конфигурации
 
+	/**
+	 * Обработка вызовов несуществующих действий
+	 *
+	 * @param string $method
+	 * @param array $args
+	 */
+	public function __call($method, $args)
+	{
+	    $this->getResponse()->setHttpResponseCode(404);
+	    $this->_helper->layout->setLayout('404');
+	}
+
     public function init()
     {
     	# Подключение системы контроля доступа
@@ -22,6 +34,7 @@ class AdminController extends Zend_Controller_Action
     	# Запускаем сессию для авторизации
     	$this->_session =  new Zend_Session_Namespace();
     	$this->_config = new Zend_Config_Ini(CONFIG_FILE, APPLICATION_ENV);
+    	$this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 
     /**
@@ -116,14 +129,81 @@ class AdminController extends Zend_Controller_Action
     }
 
     /**
+     * Получение статьи по идентификатору
+     *
+     */
+    public function getarticleAction()
+    {
+        if (! $this->getRequest()->isGet())
+    		return $this->getResponse()->setHttpResponseCode(415);
+    	if (! $this->getRequest()->isXmlHttpRequest())
+    		return $this->getResponse()->setHttpResponseCode(415);
+    	if (is_null($id = $this->getRequest()->getParam('articleID')))
+            return $this->getResponse()->setHttpResponseCode(400);
+
+    	$this->_helper->viewRenderer->setNoRender();
+    	$this->_helper->layout->disableLayout();
+    	$this->getResponse()
+			->setHeader('Content-Type', 'application/json; charset=UTF-8')
+			->appendBody(json_encode($this->_articles->getArticleByID($id)));
+    }
+
+    public function articlesremoveAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+    	$this->_helper->layout->disableLayout();
+
+        if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+    	if (! $this->getRequest()->isXmlHttpRequest())
+    		return $this->getResponse()->setHttpResponseCode(415);
+        if (is_null($id = $this->getRequest()->getPost('id')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param id');
+
+    	try {
+    	   $this->_articles->removeArticle($id);
+    	} catch (ArticleException $ex) {
+    	    return $this->getResponse()->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
+    	    return $this->getResponse()->setHttpResponseCode(500);
+    	}
+    }
+
+    /**
      * Сохранение статей
      *
      */
     public function articlessaveAction()
     {
-    	$this->_helper->viewRenderer->setNoRender();
+        $this->_helper->viewRenderer->setNoRender();
     	$this->_helper->layout->disableLayout();
-    	echo ($this->_articles->updateArticle($this->_request)) ? 'Данные успешно сохранены' : 'Ошибка сохранения данных';
+
+        if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+    	if (! $this->getRequest()->isXmlHttpRequest())
+    		return $this->getResponse()->setHttpResponseCode(415);
+        if (is_null($id = $this->getRequest()->getPost('id')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param id');
+        if (is_null($headline = $this->getRequest()->getPost('headline')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param headline');
+        if (is_null($content = $this->getRequest()->getPost('content')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param content');
+
+    	try {
+    	   $this->_articles->updateArticle($id, $headline, $content);
+    	} catch (ArticleException $ex) {
+    	    return $this->getResponse()->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
+    	    return $this->getResponse()->setHttpResponseCode(500);
+    	}
     }
 
     /**
@@ -133,13 +213,14 @@ class AdminController extends Zend_Controller_Action
      */
     public function articlesviewAction()
     {
+        $this->_helper->viewRenderer->setNoRender();
+    	$this->_helper->layout->disableLayout();
+
     	if (! $this->getRequest()->isGet())
     		return $this->getResponse()->setHttpResponseCode(415);
     	if (! $this->getRequest()->isXmlHttpRequest())
     		return $this->getResponse()->setHttpResponseCode(415);
 
-    	$this->_helper->viewRenderer->setNoRender();
-    	$this->_helper->layout->disableLayout();
     	$this->getResponse()
 			->setHeader('Content-Type', 'application/json; charset=UTF-8')
 			->appendBody($this->_articles->getTreeArticles());
@@ -156,7 +237,8 @@ class AdminController extends Zend_Controller_Action
     	$this->_helper->layout->setLayout('layout-admin-pages');
     	$this->view->categoriesListRoot = Application_Model_Categories::stmt2selectEncode(
     		$this->_categories->getCategoriesRoot(), 'name', 'name');
-    	$this->view->categoriesListParent = $this->_categories->getCategoriesFolder();
+    	$this->view->categoriesList = Application_Model_Categories::stmt2selectEncode(
+    	   $this->_categories->getCategories(), 'name', 'name');
     }
 
     /**
@@ -165,22 +247,23 @@ class AdminController extends Zend_Controller_Action
      */
     public function categoriesviewAction()
     {
+        $this->_helper->viewRenderer->setNoRender();
+	    $this->_helper->layout->disableLayout();
+
     	if (! $this->getRequest()->isGet())
     		return $this->getResponse()->setHttpResponseCode(415);
     	if (! $this->getRequest()->isXmlHttpRequest())
     		return $this->getResponse()->setHttpResponseCode(415);
 
-    	$this->_helper->viewRenderer->setNoRender();
-	    $this->_helper->layout->disableLayout();
-
     	$category = $this->getRequest()->getQuery('category');
-    	$type = $this->getRequest()->getQuery('type');
     	if (! empty($category))
-    		$answer = $this->_categories->getCategoriesListSpecified($category);
-    	elseif (isset($type))
-    		$answer = $this->_categories->getCategoriesListType($type);
+    		$categories = $this->_categories->getCategoriesListSpecified($category);
     	else
-    		$answer = $this->_categories->getCategories();
+    		$categories = $this->_categories->getCategories();
+        $categories = $categories->fetchAll();
+        $data['total'] = count($categories);
+        $data['categories'] = $categories;
+        $answer = json_encode($data);
     	$this->getResponse()
 			->setHeader('Content-Type', 'application/json; charset=UTF-8')
 			->appendBody($answer);
@@ -192,16 +275,35 @@ class AdminController extends Zend_Controller_Action
      */
     public function categorieseditAction()
     {
-    	if (! $this->getRequest()->isPost())
-    		return $this->getResponse()->setHttpResponseCode(415);
-
-    	$this->_helper->viewRenderer->setNoRender();
+        $this->_helper->viewRenderer->setNoRender();
 	    $this->_helper->layout->disableLayout();
 
+    	if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+		if (is_null($id = $this->getRequest()->getPost('id')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param id');
+		if (is_null($sequence = $this->getRequest()->getPost('sequence')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param sequence');
+		if (is_null($parent = $this->getRequest()->getPost('parent')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param parent');
+		if (is_null($name = $this->getRequest()->getPost('name')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param name');
+
     	try {
-    		$this->_categories->editCategories($this->getRequest());
-    	} catch (CategoriesException $ex) {
+    		$this->_categories->editCategories($id, $sequence, $parent, $name);
+    	} catch (Categories_Exception $ex) {
     		return $this->getResponse()
+    			->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
+    	    return $this->getResponse()
     			->setHttpResponseCode(500);
     	}
     	$this->getResponse()
@@ -214,15 +316,26 @@ class AdminController extends Zend_Controller_Action
      */
     public function categoriesaddAction()
     {
-    	if (! $this->getRequest()->isPost())
-    		return $this->getResponse()->setHttpResponseCode(415);
-
-    	$this->_helper->viewRenderer->setNoRender();
+        $this->_helper->viewRenderer->setNoRender();
 	    $this->_helper->layout->disableLayout();
 
+    	if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+        if (is_null($parent = $this->getRequest()->getPost('parent')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param parent');
+        if (is_null($name = $this->getRequest()->getPost('name')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param name');
+
     	try {
-    		$this->_categories->addCategories($this->getRequest());
+    		$this->_categories->addCategories($parent, $name);
     	} catch (CategoriesException $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
     		return $this->getResponse()
     			->setHttpResponseCode(500);
     	}
@@ -236,14 +349,21 @@ class AdminController extends Zend_Controller_Action
      */
     public function categoriesdelAction()
     {
+        $this->_helper->viewRenderer->setNoRender();
+	    $this->_helper->layout->disableLayout();
+
     	if (! $this->getRequest()->isPost())
     		return $this->getResponse()->setHttpResponseCode(415);
-
-    	$this->_helper->viewRenderer->setNoRender();
-    	$this->_helper->layout->disableLayout();
+        if (is_null($id = $this->getRequest()->getPost('id')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param id');
     	try {
-    		$this->_categories->delCategories($this->_request);
-    	} catch (CategoriesException $ex) {
+    		$this->_categories->delCategories($id);
+    	} catch (Categories_Exception $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
     		return $this->getResponse()
     			->setHttpResponseCode(500);
     	}

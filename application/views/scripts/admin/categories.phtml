@@ -12,12 +12,6 @@ Ext.onReady(function() {
 	        msg: 'Пожалуйста, подождите. Идет загрузка ...'
 	    });
 
-	function folderFormat(f)
-	{
-		if (f == 0) return 'файл/статья';
-        if (f == 1) return 'папка';
-	}
-
     // Функция отправки данных для удаления
     function confirmDelete(btn) {
         if (btn == 'yes') {
@@ -47,7 +41,6 @@ Ext.onReady(function() {
 	   	fields: [
 			{name: 'id', type: 'integer'},
 			{name: 'sequence', type: 'integer'},
-			{name: 'folder', type: 'string'},
 			{name: 'parent', type: 'string'},
 			{name: 'name', type: 'string'}
 		]
@@ -74,7 +67,6 @@ Ext.onReady(function() {
                     params: {
                         id: record.data['id'],
                         sequence: record.data['sequence'],
-                        folder: record.data['folder'],
                         parent: record.data['parent'],
                         name: record.data['name']
                     },
@@ -100,7 +92,7 @@ Ext.onReady(function() {
             {
                 xtype: 'combo',
                 fieldLabel: 'категория (родитель)',
-                store: <?=$this->categoriesListParent?>,
+                store: <?=$this->categoriesList?>,
                 width: 380,
                 labelWidth: 150,
                 itemId: 'parent'
@@ -110,17 +102,12 @@ Ext.onReady(function() {
                 labelWidth: 150,
                 itemId: 'name'
             },{
-                xtype: 'combo',
-                fieldLabel: 'тип ресурса',
-                mode: 'local',
-                emptyText: 'файл/статья',
-                store: [["0","файл/статья"],["1","папка"]],
-                width: 380,
-                labelWidth: 150,
-                itemId: 'folder'
-            },{
                 xtype: 'container',
-                html: 'Чтобы создать КОРНЕВУЮ директорию, напишите ее имя в поле "подкатегория (потомок)", а поле "категория (родитель)" оставьте пустым. Вы также можете создать категорию-потомок от не существующей категории-родителя, впишите их имена в соответствующие поля и они будут созданы за одно действие.'
+                html: 'Чтобы создать КОРНЕВУЮ директорию, напишите ее имя в поле ' +
+                    '"подкатегория (потомок)", а поле "категория (родитель)" ' +
+                    'оставьте пустым. Вы также можете создать категорию-потомок ' +
+                    'от не существующей категории-родителя, впишите их имена в ' +
+                    'соответствующие поля и они будут созданы за одно действие.'
             }],
 		buttons:
         [
@@ -134,8 +121,7 @@ Ext.onReady(function() {
                         method: 'POST',
                         params: {
                             parent: newCategory.getComponent('parent').getValue(),
-                            name: newCategory.getComponent('name').getValue(),
-                            folder: newCategory.getComponent('folder').getValue()
+                            name: newCategory.getComponent('name').getValue()
                         },
                         success: function(answer) {
                             //alert(answer.responseText);
@@ -143,7 +129,7 @@ Ext.onReady(function() {
                             store.load();
                         },
                         failure: function() {
-                            Ext.Msg.alert("Ошибка", "Ошибка создания ресурса");
+                            Ext.Msg.alert("Ошибка", "Ошибка создания категории");
                             loadMaskGrid.hide();
                         }
                     })
@@ -179,19 +165,6 @@ Ext.onReady(function() {
         				});
         			}
         		}
-        	}),
-			new Ext.form.Label({
-                html: 'Показать только тип'
-        	}),
-        	new Ext.form.field.ComboBox({
-        		store: [[0, "статьи"], [1, "папки"]],
-        		listeners: {
-        			'select': function(field, value, opt) {
-        				store.load({
-        					url:URLcategoriesAll + '?type=' + field.getValue()
-        				});
-        			}
-        		}
         	})
         ]
 	});
@@ -212,13 +185,6 @@ Ext.onReady(function() {
 				align: 'right',
 				width: 80,
 				field: 'textfield'
-			},{
-				header: 'тип данных',
-				dataIndex: 'folder',
-				renderer: folderFormat,
-				align: 'center',
-				width: 150,
-				field: new Ext.form.field.ComboBox({store:[[0,"файл/статья"],[1,"папка"]]})
 			},{
 				header: 'родитель',
 				dataIndex: 'parent',

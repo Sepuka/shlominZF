@@ -21,19 +21,6 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 		));
 
 	/**
-	 * Приведение массива к json
-	 *
-	 * @param array $arr
-	 * @return json
-	 */
-	public function jsonEncode($arr)
-	{
-		$data['total'] = count($arr);
-		$data['categories'] = $arr;
-		return json_encode($data);
-	}
-
-	/**
 	 * Конвертирует результат выборки в строку
 	 * Возвращает строку вида [["name1","name1"],["name2","name2"], ...]
 	 * для использования в html элементе select
@@ -44,7 +31,7 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	public static function stmt2selectEncode($stmt, $key='id', $name='value')
 	{
 		if (! $stmt instanceof Zend_Db_Statement)
-			throw new Categories_Exception('stmt2selectEncode ожидает Zend_Db_Statement');
+			throw new Categories_Exception('stmt2selectEncode expect Zend_Db_Statement');
 		$output = array();
 		foreach ($stmt->fetchAll() as $value)
 			$output[] = sprintf('["%s","%s"]', $value[$key], $value[$name]);
@@ -61,13 +48,16 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	public function getCategoriesTree($parent='', $articleID=0)
 	{
 		$tree = array();
-		$select = $this->select()->where('parent=?', $parent);
+		$select = $this->select()
+            ->where('parent=?', $parent)
+            ->order('folder DESC');
 		# Получаем папки нужной категории
 		foreach ($this->fetchAll($select) as $row) {
 			$tree[] = array(
                 'id'		=> $row['id'],
 				'text'		=> $row['name'],
 				'expanded'	=> false,
+				'leaf'      => (empty($row['folder'])) ? true : false,
 				'articles'	=> $this->getCategoriesTree($row['name'], $row['id']));
 		}
 		# Получаем статьи нужной категории
@@ -86,17 +76,6 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	}
 
 	/**
-	 * Получение списка всех категорий
-	 *
-	 * @return json
-	 */
-	public function getCategories()
-	{
-		$stmt = $this->select()->query();
-		return $this->jsonEncode($stmt->fetchAll());
-	}
-
-	/**
 	 * Получение списка корневых категорий
 	 *
 	 * @return Zend_Db_Statement
@@ -107,6 +86,16 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 				->where('parent=?', '')
 				->order('name ASC')
 				->query();
+	}
+
+	/**
+	 * Получение всех категорий
+	 *
+	 * @return Zend_Db_Statement
+	 */
+	public function getCategories()
+	{
+	    return $this->select()->query();
 	}
 
 	/**
@@ -132,82 +121,57 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	 * Получение подкатегорий указанной категории
 	 *
 	 * @param string $category
-	 * @return string json
+	 * @return Zend_Db_Statement
 	 */
 	public function getCategoriesListSpecified($category)
 	{
-		$stmt = $this->select()
+		return $this->select()
 				->where('parent=?', $category)
 				->query();
-		return $this->jsonEncode($stmt->fetchAll());
-	}
-
-	/**
-	 * Получение списка категорий определенного типа (файлы или папки)
-	 *
-	 * @param integer $type
-	 * @return string
-	 */
-	public function getCategoriesListType($type)
-	{
-		$stmt = $this->select()
-				->where('folder=?', $type, Zend_Db::INT_TYPE)
-				->query();
-		return $this->jsonEncode($stmt->fetchAll());
 	}
 
 	/**
 	 * Редактирование категорий
-	 *
-	 * Возвращает истину если обновление строки прошло
-	 * или ложь если строка не была обновлена
 	 * 
-	 * @throws CategoryException
-	 * @param Zend_Controller_Request_Abstract $data
+	 * @throws Category_Exception
+	 * @param integer $id
+	 * @param integer $sequence
+	 * @param string $parent
+	 * @param string $name
 	 * @return void
 	 */
-	public function editCategories($data)
+	public function editCategories($id, $sequence, $parent, $name)
 	{
-		if (! $data instanceof Zend_Controller_Request_Abstract)
-			throw new CategoriesException('Ожидается объект Zend_Controller_Request_Abstract');
-		$id = $data->getPost('id');
-		$sequence = $data->getPost('sequence');
-		$folder = $data->getPost('folder');
-		$parent = $data->getPost('parent');
-		$name = $data->getPost('name');
-		if (!isset($id) || !isset($sequence) || !isset($folder) || !isset($parent) || !isset($name))
-			throw new CategoriesException('Не все поля заполнены');
+
+		if (empty($id) || empty($name))
+			throw new Categories_Exception('Не все поля заполнены');
 		$category = $this->find($id)->current();
 		if (is_null($category))
 			throw new CategoriesException('Не найдено категории с id ' . $id);
 		$category->sequence = $sequence;
-		$category->folder = $folder;
 		$category->parent = $parent;
 		$category->name = $name;
 		$category->save();
 	}
 
 	/**
-	 * Добавление категории или статьи
+	 * Создание новой категории
 	 *
-	 * @throws CategoryException
-	 * @param Zend_Controller_Request_Abstract $data
+	 * @throws Category_Exception
+	 * @param string $parent
+	 * @param string $name
 	 * @return void
 	 */
-	public function addCategories($data)
+	public function addCategories($parent, $name)
 	{
-		if (! $data instanceof Zend_Controller_Request_Abstract)
-			throw new CategoriesException('Ожидается объект Zend_Controller_Request_Abstract');
-		$folder = $data->getPost('folder');
-		$parent = $data->getPost('parent');
-		$name = $data->getPost('name');
-		if (!isset($folder) || !isset($parent) || !isset($name))
-			throw new CategoriesException('Не все поля заполнены');
+		if (empty($name))
+			throw new Categories_Exception('name is empty!');
 		$category = $this->createRow(
 			array(
-				'folder' 	=> $folder,
 				'parent' 	=> $parent,
-				'name' 		=> $name)
+				'name' 		=> $name,
+				'dateCreate'=> date('Y-m-d H:i:s'),
+				'dateChange'=> date('Y-m-d H:i:s'))
 			);
 		$category->save();
 	}
@@ -215,16 +179,13 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	/**
 	 * Удаление категорий
 	 *
-	 * @throws CategoryException
-	 * @param Zend_Controller_Request_Abstract $data
+	 * @throws Category_Exception
+	 * @param integer $id
 	 * @return void
 	 */
-	public function delCategories($data)
+	public function delCategories($id)
 	{
-		if (! $data instanceof Zend_Controller_Request_Abstract)
-			throw new CategoriesException('Ожидается объект Zend_Controller_Request_Abstract');
-
-		$where = $this->getAdapter()->quoteInto('id = ?', $data->getPost('id'));
+		$where = $this->getAdapter()->quoteInto('id = ?', $id);
 		$this->delete($where);
 	}
 

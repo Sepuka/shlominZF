@@ -9,6 +9,8 @@ Ext.onReady(function() {
 
 	var URLarticlesSave = '/admin/articlesSave';
 	var URLarticlesView = '/admin/articlesView';
+	var URLarticlesGet = '/admin/getArticle';
+	var URLarticlesRemove = '/admin/articlesRemove';
 
 	var loadMask = new Ext.LoadMask(
 	    Ext.getBody(),
@@ -16,26 +18,11 @@ Ext.onReady(function() {
 	        msg: 'Пожалуйста, подождите. Идет загрузка ...'
 	    });
 
-	var editor = Ext.create('Ext.form.HtmlEditor', {
+	var htmlEditor = Ext.create('Ext.form.HtmlEditor', {
 		
 	});
 
-	var warning = Ext.create('Ext.panel.Panel', {
-		title: 'Возможные проблемы',
-		html: <?=$this->warnings?>
-	});
-
-	Ext.define('topDir', {
-		extend: 'Ext.data.Model',
-		fields: ['id', 'text', 'articles'],
-		hasMany: 'subDir'
-	});
-	Ext.define('subDir', {
-		extend: 'Ext.data.Model',
-		fields: ['id', 'text'],
-		belongsTo: 'topDir'
-	});
-
+	// Хранилище для дерева статей
 	var treeArticlesStore = Ext.create('Ext.data.TreeStore', {
 		model: 'topDir',
 		autoLoad: true,
@@ -59,8 +46,11 @@ Ext.onReady(function() {
 		store: treeArticlesStore,
 		height: 400,
 		listeners: {
-			'show': function(obj, opt) {
-				alert();
+			select: function(rowModel, dataModel, row, obj) {
+			    // Обрабатываем клики только на статьи. Папки игнорируем
+			    if (dataModel.get('leaf')) {
+			        loadArticle(dataModel.get('id'));
+			    }
 			}
 		}
 	});
@@ -77,31 +67,118 @@ Ext.onReady(function() {
 			xtype: 'button',
 			text: 'Сохранить',
 			handler: function() {
+			    if (articleID == 0) {
+			        Ext.Msg.alert('Ошибка', 'Сначала надо выбрать статью для редактирования');
+			        return;
+			    }
 				loadMask.show();
+				toolbar.disable(true);
 				Ext.Ajax.request({
 					url: URLarticlesSave,
 					method: 'POST',
                     params: {
-                        article: editor.getValue(),
-                        headline: toolbar.getComponent('headline').getValue()
+                        content: htmlEditor.getValue(),
+                        headline: toolbar.getComponent('headline').getValue(),
+                        id: articleID
                     },
                     success: function(answer) {
-                    	loadMask.hide();
                         //alert(answer.responseText);
                     },
                     failure: function() {
                     	loadMask.hide();
-                        Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+                        Ext.Msg.alert("Ошибка", "Неудалось сохранить данные");
+                    },
+                    callback: function() {
+                        loadMask.hide();
+                        toolbar.enable(true);
                     }
 				})
 			}
 		},{
 			xtype: 'button',
-			text: 'Обновить'
+			text: 'Обновить',
+			handler: function() {
+                if (articleID > 0)
+                    loadArticle(articleID);
+                else
+                    Ext.Msg.alert('Ошибка', 'Выберите статью для редактирования!');
+            }
 		},{
 			xtype: 'button',
-			text: 'Удалить'
+			text: 'Удалить',
+			handler: function() {
+                if (articleID > 0) {
+                    loadMask.show();
+				    toolbar.disable(true);
+				    Ext.Ajax.request({
+    					url: URLarticlesRemove,
+    					method: 'POST',
+                        params: {
+                            id: articleID
+                        },
+                        success: function(answer) {
+                            htmlEditor.setValue();
+                            toolbar.getComponent('headline').setValue();
+                            articleID = 0;
+                        },
+                        failure: function() {
+                        	loadMask.hide();
+                            Ext.Msg.alert("Ошибка", "Неудалось удалить статью");
+                        },
+                        callback: function() {
+                            loadMask.hide();
+                            toolbar.enable(true);
+                        }
+    				})
+                }
+                else
+                    Ext.Msg.alert('Ошибка', 'Выберите статью для удаления!');
+			}
 		}]
+	});
+
+	var warning = Ext.create('Ext.panel.Panel', {
+		title: 'Возможные проблемы',
+		html: <?=$this->warnings?>
+	});
+
+	// Загрузка статьи в область редактирования
+	function loadArticle(id)
+	{
+	    articleID = id;
+	    loadMask.show();
+	    toolbar.disable(true);
+	    Ext.Ajax.request({
+            url: URLarticlesGet,
+        method: 'GET',
+        params: {
+            articleID: id,
+        },
+        success: function(answer) {
+            // Ответ приходит в виде JSON-массива
+            answer = Ext.JSON.decode(answer.responseText);
+            htmlEditor.setValue(answer['content']);
+            toolbar.items.get('headline').setValue(answer['headline']);
+        },
+        failure: function() {
+            Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+        },
+        callback: function() {
+            loadMask.hide();
+            toolbar.enable(true);
+        }
+        })
+	}
+
+	Ext.define('topDir', {
+		extend: 'Ext.data.Model',
+		fields: ['id', 'text', 'articles'],
+		hasMany: 'subDir'
+	});
+	Ext.define('subDir', {
+		extend: 'Ext.data.Model',
+		fields: ['id', 'text'],
+		belongsTo: 'topDir'
 	});
 
 	var viewport = Ext.create('Ext.container.Viewport', {
@@ -114,11 +191,11 @@ Ext.onReady(function() {
 		},{
 			region: 'center',
 			itemId: 'centerMenuPanel',
-			items: editor,
+			items: htmlEditor,
 			bbar: toolbar
 		}]
 	});
-	editor.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
-	editor.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
+	htmlEditor.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
+	htmlEditor.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
 });
 </script>
