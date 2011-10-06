@@ -49,15 +49,13 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	{
 		$tree = array();
 		$select = $this->select()
-            ->where('parent=?', $parent)
-            ->order('folder DESC');
+            ->where('parent=?', $parent);
 		# Получаем папки нужной категории
 		foreach ($this->fetchAll($select) as $row) {
 			$tree[] = array(
                 'id'		=> $row['id'],
 				'text'		=> $row['name'],
 				'expanded'	=> false,
-				'leaf'      => (empty($row['folder'])) ? true : false,
 				'articles'	=> $this->getCategoriesTree($row['name'], $row['id']));
 		}
 		# Получаем статьи нужной категории
@@ -171,9 +169,8 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 			array(
 				'parent' 	=> $parent,
 				'name' 		=> $name,
-				'dateCreate'=> date('Y-m-d H:i:s'),
-				'dateChange'=> date('Y-m-d H:i:s'))
-			);
+				'dateCreate'=> date('Y-m-d H:i:s')
+			));
 		$category->save();
 	}
 

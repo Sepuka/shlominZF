@@ -188,6 +188,10 @@ class AdminController extends Zend_Controller_Action
             return $this->getResponse()
                 ->setHttpResponseCode(400)
                 ->appendBody('expect param id');
+        if (is_null($categoryID = $this->getRequest()->getPost('categoryID')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param categoryID');
         if (is_null($headline = $this->getRequest()->getPost('headline')))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
@@ -198,7 +202,7 @@ class AdminController extends Zend_Controller_Action
                 ->appendBody('expect param content');
 
     	try {
-    	   $this->_articles->updateArticle($id, $headline, $content);
+    	   $this->_articles->updateArticle($id, $categoryID, $headline, $content);
     	} catch (ArticleException $ex) {
     	    return $this->getResponse()->setHttpResponseCode(400);
     	} catch (Exception $ex) {

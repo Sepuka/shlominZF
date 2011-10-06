@@ -6,6 +6,8 @@ Ext.require([
 Ext.onReady(function() {
 	// переменная хранит идентификатор текущей статьи
 	var articleID = 0;
+	// Переменная для хранения идентификатора выбранной категории
+	var categoryID = 0;
 
 	var URLarticlesSave = '/admin/articlesSave';
 	var URLarticlesView = '/admin/articlesView';
@@ -20,6 +22,17 @@ Ext.onReady(function() {
 
 	var htmlEditor = Ext.create('Ext.form.HtmlEditor', {
 		
+	});
+
+	Ext.define('topDir', {
+		extend: 'Ext.data.Model',
+		fields: ['id', 'text', 'articles'],
+		hasMany: 'subDir'
+	});
+	Ext.define('subDir', {
+		extend: 'Ext.data.Model',
+		fields: ['id', 'text'],
+		belongsTo: 'topDir'
 	});
 
 	// Хранилище для дерева статей
@@ -49,7 +62,13 @@ Ext.onReady(function() {
 			select: function(rowModel, dataModel, row, obj) {
 			    // Обрабатываем клики только на статьи. Папки игнорируем
 			    if (dataModel.get('leaf')) {
+			        categoryID = 0;
 			        loadArticle(dataModel.get('id'));
+			    } else {
+			        categoryID = dataModel.get('id');
+			        articleID = 0;
+			        htmlEditor.setValue('Здесь вы можете вписать текст новой статьи');
+                    toolbar.getComponent('headline').setValue('Заголовок новой статьи');
 			    }
 			}
 		}
@@ -67,8 +86,8 @@ Ext.onReady(function() {
 			xtype: 'button',
 			text: 'Сохранить',
 			handler: function() {
-			    if (articleID == 0) {
-			        Ext.Msg.alert('Ошибка', 'Сначала надо выбрать статью для редактирования');
+			    if (articleID == 0 && categoryID == 0) {
+			        Ext.Msg.alert('Ошибка', 'Выберите статью для редактирования или папку для создания новой статьи');
 			        return;
 			    }
 				loadMask.show();
@@ -79,7 +98,8 @@ Ext.onReady(function() {
                     params: {
                         content: htmlEditor.getValue(),
                         headline: toolbar.getComponent('headline').getValue(),
-                        id: articleID
+                        id: articleID,
+                        categoryID: categoryID
                     },
                     success: function(answer) {
                         //alert(answer.responseText);
@@ -91,6 +111,7 @@ Ext.onReady(function() {
                     callback: function() {
                         loadMask.hide();
                         toolbar.enable(true);
+                        treeArticlesStore.load();
                     }
 				})
 			}
@@ -128,6 +149,7 @@ Ext.onReady(function() {
                         callback: function() {
                             loadMask.hide();
                             toolbar.enable(true);
+                            treeArticlesStore.load();
                         }
     				})
                 }
@@ -169,17 +191,6 @@ Ext.onReady(function() {
         }
         })
 	}
-
-	Ext.define('topDir', {
-		extend: 'Ext.data.Model',
-		fields: ['id', 'text', 'articles'],
-		hasMany: 'subDir'
-	});
-	Ext.define('subDir', {
-		extend: 'Ext.data.Model',
-		fields: ['id', 'text'],
-		belongsTo: 'topDir'
-	});
 
 	var viewport = Ext.create('Ext.container.Viewport', {
 		layout: 'border',
