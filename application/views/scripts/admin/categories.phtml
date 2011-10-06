@@ -42,7 +42,9 @@ Ext.onReady(function() {
 			{name: 'id', type: 'integer'},
 			{name: 'sequence', type: 'integer'},
 			{name: 'parent', type: 'string'},
-			{name: 'name', type: 'string'}
+			{name: 'name', type: 'string'},
+			{name: 'dateChange', type: 'string'},
+			{name: 'dateCreate', type: 'string'}
 		]
 	});
 
@@ -71,12 +73,13 @@ Ext.onReady(function() {
                         name: record.data['name']
                     },
                     success: function(answer) {
-                    	loadMaskGrid.hide();
                         //alert(answer.responseText);
                     },
                     failure: function() {
-                    	loadMaskGrid.hide();
                         Ext.Msg.alert("Ошибка", 'Не удалось обновить данные');
+                    },
+                    callback: function() {
+                        loadMaskGrid.hide();
                     }
 				});
 			}
@@ -165,6 +168,19 @@ Ext.onReady(function() {
         				});
         			}
         		}
+        	}),
+        	new Ext.form.Label({
+                html: 'Список детей категории'
+        	}),
+        	new Ext.form.field.ComboBox({
+        		store: <?=$this->categoriesChildList?>,
+        		listeners: {
+        			'select': function(field, value, opt) {
+        				store.load({
+        					url:URLcategoriesAll + '?category=' + field.getValue()
+        				});
+        			}
+        		}
         	})
         ]
 	});
@@ -175,25 +191,37 @@ Ext.onReady(function() {
 		store: store,
 		columns: [
 			{
-				header: 'id',
+				header: 'ID',
 				dataIndex: 'id',
 				align: 'right',
 				width: 80
 			},{
-				header: 'порядок',
+				header: 'Порядок',
 				dataIndex: 'sequence',
 				align: 'right',
 				width: 80,
 				field: 'textfield'
 			},{
-				header: 'родитель',
+				header: 'Родитель',
 				dataIndex: 'parent',
 				align: 'right',
 				width: 150,
 				field: 'textfield'
 			},{
-				header: 'имя',
+				header: 'Имя',
 				dataIndex: 'name',
+				align: 'right',
+				width: 200,
+				field: 'textfield'
+			},{
+				header: 'Время изменения',
+				dataIndex: 'dateChange',
+				align: 'right',
+				width: 200,
+				field: 'textfield'
+			},{
+				header: 'Время создания',
+				dataIndex: 'dateCreate',
 				align: 'right',
 				width: 200,
 				field: 'textfield'
@@ -201,7 +229,13 @@ Ext.onReady(function() {
 		],
 		plugins: [
         	Ext.create('Ext.grid.plugin.CellEditing', {
-	            clicksToEdit: 1
+	            clicksToEdit: 2,
+	            listeners: {
+	                beforeedit: function(e, editor) {
+	                    if (e.field == 'dateChange' || e.field == 'dateCreate')
+                            return false;
+	                }
+	            }
     	    })
     	],
 		dockedItems: [{

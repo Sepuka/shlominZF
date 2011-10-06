@@ -239,6 +239,8 @@ class AdminController extends Zend_Controller_Action
     		$this->_categories->getCategoriesRoot(), 'name', 'name');
     	$this->view->categoriesList = Application_Model_Categories::stmt2selectEncode(
     	   $this->_categories->getCategories(), 'name', 'name');
+        $this->view->categoriesChildList = Application_Model_Categories::stmt2selectEncode(
+    	   $this->_categories->getCategories(), 'name', 'name');
     }
 
     /**

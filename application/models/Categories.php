@@ -151,6 +151,7 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 		$category->sequence = $sequence;
 		$category->parent = $parent;
 		$category->name = $name;
+		$category->dateChange = date('Y-m-d H:i:s');
 		$category->save();
 	}
 
