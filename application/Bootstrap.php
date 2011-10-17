@@ -5,7 +5,7 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 
 	public function init()
 	{
-		$this->_initPlaceholders();
+        $this->_initPlaceholders();
 	}
 
 	protected function _initPlaceholders()

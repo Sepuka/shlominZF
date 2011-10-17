@@ -24,5 +24,11 @@ $application = new Zend_Application(
     APPLICATION_ENV,
     APPLICATION_PATH . '/configs/application.ini'
 );
+
+$config = new Zend_Config_Ini(CONFIG_FILE, APPLICATION_ENV);
+$router = Zend_Controller_Front::getInstance()->getRouter();
+$router->addConfig($config, 'routes');
+unset($config);
+
 $application->bootstrap()
             ->run();

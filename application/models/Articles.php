@@ -28,7 +28,7 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
 		$tree = $categories_model->getCategoriesTree();
 		$data['total'] = count($tree);
 		$data['success'] = true;
-		$data['articles'] = $tree;
+		$data['children'] = $tree;
 		return json_encode($data);
 	}
 
@@ -86,10 +86,11 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
 	 * Получение статьи по идентификатору
 	 *
 	 * @param integer $id
-	 * @return array
+	 * @return Zend_Db_Table_Row_Abstract
 	 */
 	public function getArticleByID($id)
 	{
+	    return $this->find($id)->current();
 	    if ($res = $this->find($id)->current()) {
 	        return array(
 	               'content'   => $res['content'],

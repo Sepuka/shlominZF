@@ -4,23 +4,84 @@ echo $this->doctype();
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Zend Framework Quickstart Application</title>
-  <?php echo $this->headLink()->appendStylesheet('/css/global.css') ?>
+  <title>Домашний сайт на домашнем хостинге</title>
+  <?=$this->headLink()->appendStylesheet('/ext-4.0.2/resources/css/ext-all.css')?>
+  <?=$this->headScript()->appendFile('/ext-4.0.2/bootstrap.js')?>
 </head>
 <body>
-<div id="header" style="background-color: #EEEEEE; height: 30px;">
-    <div id="header-logo" style="float: left">
-        <b>ZF Quickstart Application</b>
-    </div>
-    <div id="header-navigation" style="float: right">
-        <a href="<?php echo $this->url(
-            array('controller'=>'guestbook'),
-            'default',
-            true) ?>">Guestbook</a>
-    </div>
-</div>
- 
-<?php echo $this->layout()->content ?>
- 
+<script language="javascript" type="text/javascript">
+Ext.onReady(function() {
+    Ext.define('topDir', {
+		extend: 'Ext.data.Model',
+		fields: ['id', 'text', 'children'],
+		hasMany: 'subDir'
+	});
+	Ext.define('subDir', {
+		extend: 'Ext.data.Model',
+		fields: ['id', 'text'],
+		belongsTo: 'topDir'
+	});
+
+	var treeArticlesStore = Ext.create('Ext.data.TreeStore', {
+		model: 'topDir',
+		autoLoad: true,
+		proxy: {
+        	type: 'ajax',
+        	url : '/ajax/treeArticles',
+        	reader: {
+            	type: 'json',
+            	root: 'children',
+            	idProperty: 'id'
+        	}
+    	},
+    	root: {
+    		expanded: true,
+    		text: '/'
+    	}
+	});
+
+	var treeArticles = Ext.create('Ext.tree.Panel', {
+		store: treeArticlesStore,
+		height: 250,
+		listeners: {
+			select: function(rowModel, dataModel, row, obj) {
+			    if (dataModel.get('leaf')) {
+                    window.location.href = '/article/' + dataModel.get('id');
+			    }
+			}
+		}
+	});
+
+	var linksBar = Ext.create('Ext.toolbar.Toolbar', {
+	    xtype: 'button',
+	    items: {
+	        text: 'Главная',
+	        handler: function() {
+	            window.location.href = 'http://' + window.location.host;
+	        }
+	    }
+	});
+
+    var viewport = Ext.create('Ext.container.Viewport', {
+    		layout: 'border',
+    		items: [{
+    		    region: 'north',
+    		    items: linksBar
+    		},{
+    			region: 'west',
+    			itemId: 'westMenuPanel',
+    			width: 250,
+    			items: treeArticles
+    		},{
+    			region: 'center',
+    			itemId: 'centerMenuPanel',
+    			items: {
+    			    title: '<?=$this->layout()->articleHeadline?>',
+    			    html: '<?=$this->layout()->articleContent?>'
+    			}
+    		}]
+    	});
+});
+</script>
 </body>
 </html>

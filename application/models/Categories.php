@@ -56,7 +56,7 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
                 'id'		=> $row['id'],
 				'text'		=> $row['name'],
 				'expanded'	=> false,
-				'articles'	=> $this->getCategoriesTree($row['name'], $row['id']));
+				'children'	=> $this->getCategoriesTree($row['name'], $row['id']));
 		}
 		# Получаем статьи нужной категории
 		$stmt = $this->getAdapter()
@@ -68,7 +68,8 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 			$tree[] = array(
 				'id'	=> $row['id'],
 				'text'	=> $row['headline'],
-				'leaf'	=> true);
+				'leaf'	=> true,
+				'parentId'=>$articleID);
 		}
 		return $tree;
 	}
@@ -177,14 +178,12 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	/**
 	 * Удаление категорий
 	 *
-	 * @throws Category_Exception
 	 * @param integer $id
 	 * @return void
 	 */
 	public function delCategories($id)
 	{
-		$where = $this->getAdapter()->quoteInto('id = ?', $id);
-		$this->delete($where);
+		$this->find($id)->current()->delete();
 	}
 
 	/**

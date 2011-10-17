@@ -26,7 +26,7 @@ Ext.onReady(function() {
 
 	Ext.define('topDir', {
 		extend: 'Ext.data.Model',
-		fields: ['id', 'text', 'articles'],
+		fields: ['id', 'text', 'children'],
 		hasMany: 'subDir'
 	});
 	Ext.define('subDir', {
@@ -44,7 +44,7 @@ Ext.onReady(function() {
         	url : URLarticlesView,
         	reader: {
             	type: 'json',
-            	root: 'articles',
+            	root: 'children',
             	idProperty: 'id'
         	}
     	},
