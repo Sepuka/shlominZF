@@ -231,9 +231,9 @@ class AdminController extends Zend_Controller_Action
     }
 
     /**
-     * Просмотр категорий и действий над ними
+     * Вызов страницы для работы с категориями сайта
      * 
-     * Действие отображает страницу работы с категориями
+     * @link http://{HOST}/admin/categories
      *
      */
     public function categoriesAction()
@@ -245,6 +245,9 @@ class AdminController extends Zend_Controller_Action
     	   $this->_categories->getCategories(), 'name', 'name');
         $this->view->categoriesChildList = Application_Model_Categories::stmt2selectEncode(
     	   $this->_categories->getCategories(), 'name', 'name');
+        $metaData = $this->_categories->metaData();
+        $this->view->cntAll = $metaData['cntAll'];
+        $this->view->cntRoot = $metaData['cntRoot'];
     }
 
     /**

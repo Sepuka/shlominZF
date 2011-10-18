@@ -20,6 +20,21 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 		));
 
 	/**
+	 * Получение Метаданных таблицы
+	 *
+	 * @return array
+	 */
+	public function metaData()
+	{
+	    $cntAll = $this->select()->from($this->_name, array('cnt' => new Zend_db_Expr('COUNT(*)')))->query()->fetch();
+	    $cntRoot = count($this->select()->where('parent=""')->query()->fetchAll());
+	    return array(
+	       'cntAll'    => $cntAll['cnt'],
+	       'cntRoot'   => $cntRoot
+	    );
+	}
+
+	/**
 	 * Конвертирует результат выборки в строку
 	 * Возвращает строку вида [["name1","name1"],["name2","name2"], ...]
 	 * для использования в html элементе select

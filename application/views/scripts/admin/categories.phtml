@@ -292,16 +292,44 @@ Ext.onReady(function() {
         }
     );
 
+    var statistics = Ext.create('Ext.panel.Panel', {
+        title: 'статистика',
+        width: 200,
+        layout: {
+            type: 'table',
+            columns: 2
+        },
+        items: [{
+            html: 'Всего категорий',
+            width: 160
+        },{
+            html: '<?=$this->cntAll?>',
+            width: 38,
+            style: {
+                textAlign: 'right'
+            }
+        },{
+            html: 'Корневых категорий',
+            width: 160
+        },{
+            html: '<?=$this->cntRoot?>',
+            width: 38,
+            style: {
+                textAlign: 'right'
+            }
+        }]
+    });
+
 	var viewport = Ext.create('Ext.container.Viewport', {
 		layout: 'border',
 		items: [{
-    	    region: 'north',
-    	    items: linksBar
+            region: 'north',
+            items: linksBar
     	},{
 			region: 'west',
 			itemId: 'westMenuPanel',
 			width: 200,
-			items: menu
+			items: [menu, statistics]
 		},{
 			region: 'center',
 			itemId: 'centerMenuPanel',
