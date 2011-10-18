@@ -1,0 +1,5 @@
+
+User-Agent:*
+Disallow:/admin/
+
+Visit-time:0200-0500
