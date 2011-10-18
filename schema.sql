@@ -23,11 +23,12 @@ DROP TABLE IF EXISTS `acl`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `acl` (
-  `nick` varchar(64) NOT NULL COMMENT 'Идентификатор пользователя',
-  `password` char(32) NOT NULL COMMENT 'хеш пароля',
+  `login` varchar(64) NOT NULL COMMENT 'Идентификатор пользователя',
+  `hash` char(32) NOT NULL COMMENT 'хеш пароля',
   `role` set('guest','staff','administrator') NOT NULL DEFAULT 'guest',
-  PRIMARY KEY (`nick`),
-  KEY `role` (`role`)
+  PRIMARY KEY (`login`),
+  KEY `role` (`role`),
+  KEY `hash` (`hash`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Таблица контроля доступа';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -37,7 +38,37 @@ CREATE TABLE `acl` (
 
 LOCK TABLES `acl` WRITE;
 /*!40000 ALTER TABLE `acl` DISABLE KEYS */;
+INSERT INTO `acl` VALUES ('admin','f1c2820be12b42bb0c4f7208919b5c0a','administrator');
 /*!40000 ALTER TABLE `acl` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `articles`
+--
+
+DROP TABLE IF EXISTS `articles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `articles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `category` smallint(6) NOT NULL,
+  `headline` varchar(255) NOT NULL DEFAULT '',
+  `content` text NOT NULL,
+  `createDate` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `changeDate` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`),
+  KEY `category` (`category`)
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `articles`
+--
+
+LOCK TABLES `articles` WRITE;
+/*!40000 ALTER TABLE `articles` DISABLE KEYS */;
+INSERT INTO `articles` VALUES (35,41,'Анализ сетевой активности с помощью MRTG','Описание программы MRTG анализирующей сетевой трафик через snmp','2011-10-18 16:55:06','0000-00-00 00:00:00');
+/*!40000 ALTER TABLE `articles` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -49,13 +80,14 @@ DROP TABLE IF EXISTS `categories`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `categories` (
   `id` smallint(6) NOT NULL AUTO_INCREMENT,
-  `folder` tinyint(1) NOT NULL DEFAULT '0',
+  `sequence` int(11) NOT NULL DEFAULT '999',
   `parent` varchar(50) NOT NULL DEFAULT '',
   `name` varchar(50) NOT NULL DEFAULT '',
+  `dateCreate` datetime NOT NULL,
+  `dateChange` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `parent` (`parent`),
-  KEY `folder` (`folder`)
-) ENGINE=MyISAM AUTO_INCREMENT=24 DEFAULT CHARSET=cp1251;
+  KEY `parent` (`parent`)
+) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -64,7 +96,7 @@ CREATE TABLE `categories` (
 
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES (1,1,'','TDD'),(2,1,'TDD','PHPUnit'),(3,1,'','о сайте'),(5,0,'о сайте','Движок'),(9,0,'о сайте','обо мне'),(20,1,'','Криптография'),(21,1,'Криптография','openssl'),(22,1,'Криптография','GnuPG'),(23,0,'openssl','Авторизация сертификатом');
+INSERT INTO `categories` VALUES (37,999,'Программирование','PHP','2011-10-18 10:19:56','0000-00-00 00:00:00'),(39,999,'Программирование','python','2011-10-18 10:20:42','0000-00-00 00:00:00'),(41,999,'Администрирование','Сетевое администирование','2011-10-18 10:21:28','0000-00-00 00:00:00'),(63,999,'','Программирование','2011-10-18 11:27:00','0000-00-00 00:00:00'),(64,999,'','Администрирование','2011-10-18 11:27:10','0000-00-00 00:00:00');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -96,29 +128,29 @@ LOCK TABLES `comments` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `pages`
+-- Table structure for table `log`
 --
 
-DROP TABLE IF EXISTS `pages`;
+DROP TABLE IF EXISTS `log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `pages` (
-  `id` int(11) NOT NULL DEFAULT '0',
-  `headline` varchar(255) NOT NULL DEFAULT '',
-  `content` text NOT NULL,
-  `date` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
+CREATE TABLE `log` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `time` datetime NOT NULL,
+  `log` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `time` (`time`)
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `pages`
+-- Dumping data for table `log`
 --
 
-LOCK TABLES `pages` WRITE;
-/*!40000 ALTER TABLE `pages` DISABLE KEYS */;
-INSERT INTO `pages` VALUES (5,'описание движка сайта и хостинга','&nbsp;&nbsp;&nbsp; Начну с того, что у меня очень слабое железо: сайт хостится на роутере <a href=\"http://www.dlink.ru/ru/products/2/786.html\">dlink dir-320</a> вместе с торентокачалкой rtorrent, samba, ftp...<br>&nbsp;&nbsp;&nbsp; Все это \"добро\" жутко тормозит, а мне захотелось бложек на кириллическом домене РФ и я решил создать сайтец на самописном движке ориентированном на слабое железо.<br>&nbsp;&nbsp;&nbsp; Сначала я пытался поставить wordpress - боже, какой ужас я испытал! 2-3 минуты грузятся страницы!! =( Потом я попробовал joomla, несколько лучше, но не то. И после этого, имея некоторый навык работы с ExtJS я решил что сделаю что-то свое. И так мы имеем: <br>&nbsp;- Процессор <a href=\"http://www.broadcom.com/products/Wireless-LAN/802.11-Wireless-LAN-Solutions/BCM5354\">BCM5354</a> с частотой 240 Мгц, 16 Кб кеша данных и столько же кеша команд;<br>&nbsp;- Памяти 32 Мб ОЗУ и 4 Мб флеш. Очень скромно;<br>&nbsp;- Винчестер Western Digital WDBAAU0010HBK - это 1 Тб на USB 2.0. Собственно жесткий диск характеристика не значительная в данном случае;<br>И из софта у нас есть:<br>&nbsp;- Прошивка \"от Олега\" для роутера;<br>&nbsp;- СУБД MySQL 4.1.22;<br>&nbsp;- PHP 5.2.12;<br>&nbsp;- Lighttpd 1.4.26;<br>&nbsp;- ExtJS 3.3.0<br><br>В данный момент я пишу этот сайтец и свежую версию его можно взять <a href=\"https://subversion.assembla.com/svn/shlomin/\">здесь</a>.<br>','2010-11-23 20:15:17'),(9,'Обо мне','<a href=\"http://twitter.com/#%21/mshlomin\"><img src=\"http://blogodom.ru/wp-content/uploads/2009/02/twit11.gif\" title=\"””\" height=\"”38?\" width=\"”160?\"></a>','2010-11-24 11:02:24'),(23,'Создание сертификатов и настройка сервера для клиентской авторизации','&nbsp;&nbsp;&nbsp; Мне понадобилось сделать авторизацию на сайте с помощью клиентского сертификата полученного с помощью пакета openssl. Ниже я описываю последовательность действий, в первую очередь для себя, чтобы не забыть.<br>&nbsp;&nbsp;&nbsp; Первое что нужно в этом деле - корневой сертификат. Этот сертификат вообще говоря должен уже существовать где-нибудь и мы должны доверять по-умолчанию источнику этого сертификата. Дальше нужно создать запрос на сертификат и отправить источнику, он нам его подпишет и мы сможет его использовать в полной мере. Но это все за деньги =) Мы можем создать корневой сертификат самостоятельно.<br><div style=\"text-align: center;\"><span style=\"font-weight: bold;\">Создание корневого самоподписанного сертификата</span><br></div><br>Вот команда:<code class=\"prettyprint lang-sh\">openssl req -new -newkey rsa:1024 -nodes -keyout ca.key -x509 -days 500 \\<br>-subj /C=RU/ST=NW/L=Spb/O=caorg/OU=ca/CN=cacompany/emailAddress=почта@хост.ru -out ca.crt</code><br>описание параметров:<br><br><ul><li>&nbsp;&nbsp;&nbsp; req - Запрос на создание нового сертификата;</li><li>&nbsp;&nbsp;&nbsp; new - Создание запроса на сертификат (Certificate Signing Request=CSR);</li><li>&nbsp;&nbsp;&nbsp; newkey rsa:1023 Автоматически будет создан новый закрытый RSA ключ длиной 1024 бита;</li><li>&nbsp;&nbsp;&nbsp; nodes - Не шифровать закрытый ключ;</li><li>&nbsp;&nbsp;&nbsp; keyout - Закрытый ключ сохранить в файл ca.key;</li><li>&nbsp;&nbsp;&nbsp; x509 - Вместо создания CSR (см. опцию -new) создать самоподписанный сертификат;</li><li>&nbsp;&nbsp;&nbsp; days - Срок действия сертификата 500 дней;</li><li>&nbsp;&nbsp;&nbsp; subj /C=RU/ST=NW/L=Spb/O=caorg/OU=ca/CN=cacompany/emailAddress=почта@хост.ru</li></ul>Данные сертификата, пары параметр=значение, перечисляются через \'/\'.<br><ul><li>&nbsp;&nbsp;&nbsp; С - Двухсимвольный код страны (Country);</li><li>&nbsp;&nbsp;&nbsp; ST - Название региона (State Name);</li><li>&nbsp;&nbsp;&nbsp; L - Название города (Locality Name);</li><li>&nbsp;&nbsp;&nbsp; O - Название организации (Organization Name);</li><li>&nbsp;&nbsp;&nbsp; OU - Название отдела (Organization Unit);</li><li>&nbsp;&nbsp;&nbsp; CN - Имя сертификата, при создании серверных сертификатов используется доменное имя сайта, для клиентских сертификатов может быть использовано что угодно (Common Name);</li><li>&nbsp;&nbsp;&nbsp; emailAddress - почтовый адрес (E-mail address)</li></ul>Важно! Параметр CN обязательно должен быть равен имени сайта, например mysite.ru, если вы делаете корневой сертификат для сервера. Если же сертификат будет использоваться для других целей, пишете все что хотите. В данном случае мы можем туда написать имя несуществующей компании-криптопровайдера.<br>В данном примере я привел простой способ, есть немного более сложный: указывать параметры сертификата не в команде в конфигурационном файле.<br><br><div style=\"text-align: center;\"><span style=\"font-weight: bold;\">создание сертификата сервера</span><br></div><br><div style=\"text-align: center;\">генерируем секретный ключ<br></div><code class=\"prettyprint lang-sh\">openssl genrsa -des3 -out server.key 1024</code><br><br><div style=\"text-align: center;\">запрос на сертификат<br></div><code class=\"prettyprint lang-sh\">openssl req -new -key server.key -out server.csr -subj /C=RU/ST=NW/L=Spb/O=serverorg/OU=server/CN=supersecure/emailAddress=почта@хост.ru</code><br><br><div style=\"text-align: center;\">подписывание сертификата корневым<br></div><code class=\"prettyprint lang-sh\">openssl x509 -req -in server.csr -out server.crt -sha1 -CA ca.crt -CAkey ca.key -CAcreateserial -days 3650</code><br><br><div style=\"text-align: center;\"><span style=\"font-weight: bold;\">создание сертификата клиента</span><br></div><br><code class=\"prettyprint lang-sh\">openssl req -new -newkey rsa:1024 -nodes -keyout client.key -subj/C=RU/ST=NW/L=Spb/O=client/OU=client/CN=supersecure/emailAddress=почта@хост.ru -out client.csr</code><br><code class=\"prettyprint lang-sh\">openssl ca -config ca.conf -in client.csr -out client.crt -batch</code><br><br><div style=\"text-align: center;\">экспорт в pkcs12 для браузеров<br></div><code class=\"prettyprint lang-sh\">openssl pkcs12 -export -in client.crt -inkey client.key -certfile ca.crt -out client.p12 -passout pass:1234</code><br><br><div style=\"text-align: center;\">проверка правильности<br></div><code class=\"prettyprint lang-sh\">openssl verify -CAfile ca.crt client.crt</code><br><code class=\"prettyprint lang-sh\">openssl verify -CAfile ca.crt server.crt</code><br><span style=\"font-size: smaller;\"><em><code class=\"prettyprint lang-sh\"></code></em></span>','2010-11-24 12:33:45');
-/*!40000 ALTER TABLE `pages` ENABLE KEYS */;
+LOCK TABLES `log` WRITE;
+/*!40000 ALTER TABLE `log` DISABLE KEYS */;
+INSERT INTO `log` VALUES (1,'2011-09-20 10:33:06',''),(2,'2011-09-20 10:33:44','Строка \"\" неверного формата'),(3,'2011-09-20 10:34:46','Строка \"\" неверного формата'),(4,'2011-09-20 10:38:04','Строка \"\" неверного формата'),(5,'2011-09-20 10:39:19','Строка \"\" неверного формата'),(6,'2011-09-20 10:41:29','Строка \"\" неверного формата'),(7,'2011-09-20 10:52:48','Неудалось добавить строку \"Array\" из-за ошибки Duplicate entry \'petya@mail\' for key \'PRIMARY\''),(8,'2011-09-20 10:52:49','Неудалось добавить строку \"Array\" из-за ошибки Duplicate entry \'vasya@mail\' for key \'PRIMARY\''),(9,'2011-09-20 10:52:49','Неудалось добавить строку \"Array\" из-за ошибки Duplicate entry \'natasha@mail\' for key \'PRIMARY\''),(10,'2011-09-20 10:52:49','Неудалось добавить строку \"Array\" из-за ошибки Duplicate entry \'tolya@mail\' for key \'PRIMARY\''),(11,'2011-09-20 10:52:49','Неудалось добавить строку \"Array\" из-за ошибки Duplicate entry \'petya@mail\' for key \'PRIMARY\''),(12,'2011-09-20 10:52:49','Строка \"fake\r\" неверного формата'),(13,'2011-09-20 10:58:54','Неудалось добавить строку \"Array\n(\n    [0] => petya@mail\n    [1] => us\n    [2] => alabama\n    [3] => qwerty\n)\n\" из-за ошибки Duplicate entry \'petya@mail\' for key \'PRIMARY\''),(14,'2011-09-20 10:58:54','Неудалось добавить строку \"Array\n(\n    [0] => vasya@mail\n    [1] => ru\n    [2] => \n    [3] => qwerty\n)\n\" из-за ошибки Duplicate entry \'vasya@mail\' for key \'PRIMARY\''),(15,'2011-09-20 10:58:54','Неудалось добавить строку \"Array\n(\n    [0] => natasha@mail\n    [1] => uk\n    [2] => \n    [3] => \n)\n\" из-за ошибки Duplicate entry \'natasha@mail\' for key \'PRIMARY\''),(16,'2011-09-20 10:58:54','Неудалось добавить строку \"Array\n(\n    [0] => tolya@mail\n    [1] => us\n    [2] => alaska\n    [3] => \n)\n\" из-за ошибки Duplicate entry \'tolya@mail\' for key \'PRIMARY\''),(17,'2011-09-20 10:58:54','Неудалось добавить строку \"Array\n(\n    [0] => petya@mail\n    [1] => us\n    [2] => alabama\n    [3] => снова Петя\n)\n\" из-за ошибки Duplicate entry \'petya@mail\' for key \'PRIMARY\''),(18,'2011-09-20 10:58:54','Неудалось добавить строку \"Array\n(\n    [0] => sasha@mail\n    [1] => ru\n    [2] => \n    [3] => \n)\n\" из-за ошибки Duplicate entry \'sasha@mail\' for key \'PRIMARY\''),(19,'2011-09-20 10:58:54','Забыли почту'),(20,'2011-09-20 10:58:54','Забыли страну'),(21,'2011-09-20 10:58:55','Строка \"fake\r\" неверного формата'),(22,'2011-09-20 10:58:55','Неудалось добавить строку \"Array\n(\n    [0] => zhenya@mail\n    [1] => ru\n    [2] => \n    [3] => \n)\n\" из-за ошибки Duplicate entry \'zhenya@mail\' for key \'PRIMARY\''),(23,'2011-09-20 11:15:03','Неудалось добавить строку \"Array\n(\n    [0] => petya@mail\n    [1] => comp\n    [2] => US\n    [3] => alabama\n    [4] => снова Петя\n)\n\" из-за ошибки Duplicate entry \'petya@mail\' for key \'PRIMARY\''),(24,'2011-09-20 11:15:03','пустая почта в \"Array\n(\n    [0] => \n    [1] => comp\n    [2] => RU\n    [3] => \n    [4] => \n)\n\"'),(25,'2011-09-20 11:15:03','Строка \"fake;;;\r\" неверного формата'),(26,'2011-09-20 11:15:03','Строка \"fake\r\" неверного формата');
+/*!40000 ALTER TABLE `log` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -137,7 +169,7 @@ CREATE TABLE `realty` (
   `floor` int(11) NOT NULL DEFAULT '1',
   `last_floor` tinyint(1) NOT NULL DEFAULT '0',
   `square` char(11) NOT NULL,
-  `cost` decimal(2,1) NOT NULL,
+  `cost` decimal(4,2) NOT NULL,
   `metro` varchar(50) NOT NULL DEFAULT '',
   `address` varchar(255) NOT NULL,
   `city` varchar(64) NOT NULL,
@@ -161,8 +193,35 @@ CREATE TABLE `realty` (
 
 LOCK TABLES `realty` WRITE;
 /*!40000 ALTER TABLE `realty` DISABLE KEYS */;
-INSERT INTO `realty` VALUES (1,0,0,1,3,2,1,'82/56/8','9.9','Алтуфьево','Вечнозеленый бульвар 11','Москва','очень хороший дом'),(2,1,0,0,2,3,1,'105/89/12','5.1','','Скобяное шоссе д.11','Сергиев Посад',''),(3,1,1,4,1,2,0,'15','9.9','Славянский бульвар','Улица и дом','Софрино',''),(5,0,0,0,2,2,0,'14','9.9','Аннино','дом и улица','Зеленоград',''),(6,0,1,3,3,2,0,'45/44/43','0.9','Автозаводская','Красная площадь д.2','Сергиев Посад','оооо'),(7,0,1,3,1,2,1,'45/34/12','4.4','','дом и улица','Сергиев Посад','нет заметки'),(8,0,1,1,2,3,0,'45/34/12','4.4','','дом и улица','Сергиев Посад','нет заметки');
+INSERT INTO `realty` VALUES (1,0,0,1,3,2,1,'82/56/8','97.94','Алтуфьево','Вечнозеленый бульвар 11','Москва','очень хороший дом'),(2,1,0,0,2,3,1,'105/89/12','5.10','','Скобяное шоссе д.11','Сергиев Посад',''),(3,1,1,4,1,2,0,'15','9.90','Славянский бульвар','Улица и дом','Софрино',''),(5,0,0,0,2,2,0,'14','9.90','Аннино','дом и улица','Зеленоград',''),(6,0,1,3,3,2,0,'45/44/43','0.90','Автозаводская','Красная площадь д.2','Сергиев Посад','оооо'),(7,0,1,3,1,2,1,'45/34/12','4.40','','дом и улица','Сергиев Посад','нет заметки'),(8,0,1,1,2,3,0,'45/34/12','4.40','','дом и улица','Сергиев Посад','нет заметки');
 /*!40000 ALTER TABLE `realty` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `users` (
+  `email` varchar(32) NOT NULL,
+  `company` varchar(20) NOT NULL,
+  `country` char(2) NOT NULL,
+  `state` varchar(20) NOT NULL,
+  `description` text NOT NULL,
+  PRIMARY KEY (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES ('natasha@mail','comp','UK','',''),('petya@mail','comp','US','alabama','qwerty'),('sasha@mail','comp','RU','',''),('tolya@mail','comp','US','alaska',''),('vasya@mail','comp','RU','','qwerty'),('zhenya@mail','comp','RU','','');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -174,4 +233,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-05-30 18:31:44
+-- Dump completed on 2011-10-18 16:56:49

@@ -145,7 +145,7 @@ class AdminController extends Zend_Controller_Action
     	$this->_helper->layout->disableLayout();
     	$this->getResponse()
 			->setHeader('Content-Type', 'application/json; charset=UTF-8')
-			->appendBody(json_encode($this->_articles->getArticleByID($id))->toArray());
+			->appendBody(json_encode($this->_articles->getArticleByID($id)->toArray()));
     }
 
     public function articlesremoveAction()
