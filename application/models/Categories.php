@@ -9,15 +9,14 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 {
 	protected $_name			= 'categories';
 	protected $_primary			= 'id';
-	protected $_dependentTables	= array('Application_Model_Articles');
+	protected $_dependentTables	= array(
+	   'Application_Model_Categories', 'Application_Model_Articles');
 	protected $_referenceMap	= array(
 		# Связь родителей и детей в категориях
-		'parentCategory' => array(
-			'columns'		=> 'name',
+		'childCategory' => array(
+			'columns'		=> 'parent',
 			'refTableClass'	=> 'Application_Model_Categories',
-			'refColumns'	=> 'parent',
-			'onDelete'		=> 'cascade',
-			'onUpdate'		=> 'cascade'
+			'refColumns'	=> 'name'
 		));
 
 	/**
@@ -158,12 +157,19 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	 * Создание новой категории
 	 *
 	 * @throws Category_Exception
-	 * @param string $parent
+	 * @param string $parent Может быть пустой строкой
 	 * @param string $name
 	 * @return void
 	 */
 	public function addCategories($parent, $name)
 	{
+	    if (! empty($parent)) {
+	        $where = $this->select()->where('name=?', $parent);
+	        # Если родителя не нашли, создадим его
+            if (! count($this->fetchRow($where)))
+                $this->addCategories('', $parent);
+            unset($where);
+	    }
 		if (empty($name))
 			throw new Categories_Exception('name is empty!');
 		$category = $this->createRow(
@@ -178,12 +184,23 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	/**
 	 * Удаление категорий
 	 *
+	 * Каскадно удаляет указанную категорию, а также всех ее потомков и 
+	 * статьи. Т.к. каскадное удаление фреймворка работает не правильно
+	 * (статьи удаляет, а категории нет) пришлось написать свою реализацию
+	 * 
 	 * @param integer $id
 	 * @return void
 	 */
 	public function delCategories($id)
 	{
-		$this->find($id)->current()->delete();
+		if (! is_null($current = $this->find($id)->current())) {
+            $childs = $current->findDependentRowset('Application_Model_Categories', 'childCategory');
+    		while ($child = $childs->current()) {
+    		    $this->delCategories($child->id);
+    		    $childs->next();
+    		}
+    		$current->delete();
+		}
 	}
 
 	/**
