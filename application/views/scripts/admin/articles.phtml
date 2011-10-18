@@ -194,7 +194,11 @@ Ext.onReady(function() {
 
 	var viewport = Ext.create('Ext.container.Viewport', {
 		layout: 'border',
-		items: [{
+		items: [
+		{
+    	    region: 'north',
+    	    items: linksBar
+    	},{
 			region: 'west',
 			itemId: 'westMenuPanel',
 			width: 200,

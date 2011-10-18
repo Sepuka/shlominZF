@@ -1,10 +1,32 @@
 <?=$this->doctype()?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <?=$this->headTitle()?>
-  <?=$this->headLink()->appendStylesheet('/ext-4.0.2/resources/css/ext-all.css')?>
-  <?=$this->headScript()->appendFile('/ext-4.0.2/bootstrap.js');?>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <?=$this->headTitle()?>
+    <?=$this->headLink()->appendStylesheet('/ext-4.0.2/resources/css/ext-all.css')?>
+    <?=$this->headScript()->appendFile('/ext-4.0.2/bootstrap.js');?>
+    <script language="JavaScript" type="text/javascript">
+  	var linksBar = Ext.create('Ext.toolbar.Toolbar', {
+	    xtype: 'button',
+	    items: [{
+                text: 'Главная страница',
+                handler: function() {
+                    window.location.href = 'http://' + window.location.host;
+	           }
+    	    },{
+    	        text: 'Панель администрирования',
+    	        handler: function() {
+    	            window.location.href = 'http://' + window.location.host + '/admin';
+    	        }
+    	    },{
+    	        text: 'Выход',
+    	        handler: function() {
+    	            window.location.href = 'http://' + window.location.host + '/logout';
+    	        }
+    	    }]
+        }
+    );
+    </script>
 </head>
 <body><?=$this->layout()->content?></body>
 </html>
