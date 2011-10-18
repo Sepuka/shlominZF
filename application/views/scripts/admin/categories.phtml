@@ -271,13 +271,37 @@ Ext.onReady(function() {
 		}
 	});
 
+	var linksBar = Ext.create('Ext.toolbar.Toolbar', {
+	    xtype: 'button',
+	    items: [{
+                text: 'Главная страница',
+                handler: function() {
+                    window.location.href = 'http://' + window.location.host;
+	           }
+    	    },{
+    	        text: 'Панель администрирования',
+    	        handler: function() {
+    	            window.location.href = 'http://' + window.location.host + '/admin';
+    	        }
+    	    },{
+    	        text: 'Выход',
+    	        handler: function() {
+    	            window.location.href = 'http://' + window.location.host + '/logout';
+    	        }
+    	    }]
+        }
+    );
+
 	var viewport = Ext.create('Ext.container.Viewport', {
 		layout: 'border',
 		items: [{
+    	    region: 'north',
+    	    items: linksBar
+    	},{
 			region: 'west',
 			itemId: 'westMenuPanel',
 			width: 200,
-			items: [menu, navigation]
+			items: menu
 		},{
 			region: 'center',
 			itemId: 'centerMenuPanel',
