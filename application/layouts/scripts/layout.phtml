@@ -42,7 +42,7 @@ Ext.onReady(function() {
 
 	var treeArticles = Ext.create('Ext.tree.Panel', {
 		store: treeArticlesStore,
-		height: 250,
+		height: 9999,
 		listeners: {
 			select: function(rowModel, dataModel, row, obj) {
 			    if (dataModel.get('leaf')) {
@@ -62,6 +62,7 @@ Ext.onReady(function() {
 	    }
 	});
 
+
     var viewport = Ext.create('Ext.container.Viewport', {
     		layout: 'border',
     		items: [{
@@ -69,9 +70,26 @@ Ext.onReady(function() {
     		    items: linksBar
     		},{
     			region: 'west',
+    			layout: 'accordion',
     			itemId: 'westMenuPanel',
     			width: 250,
-    			items: treeArticles
+    			layoutConfig: {
+                    titleCollapse: false,
+                    animate: true,
+                    activeOnTop: true
+                },
+        	    items: [
+            	    {
+                        title: 'Дерево блога',
+                        items: treeArticles,
+            	    },{
+            	        title: 'Облако тегов',
+            	        html: 'Теги'
+            	    },{
+            	        title: 'Контактная информация',
+            	        html: 'email'
+            	    }
+        	    ]
     		},{
     			region: 'center',
     			itemId: 'centerMenuPanel',
