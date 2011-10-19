@@ -126,6 +126,8 @@ class AdminController extends Zend_Controller_Action
     {
     	$this->_helper->layout->setLayout('layout-admin-pages');
     	$this->view->warnings = $this->_categories->getWarningsCategories();
+    	$layout = Zend_Layout::getMvcInstance();
+    	$layout->title = 'Редактирование статей';
     }
 
     /**
@@ -239,6 +241,8 @@ class AdminController extends Zend_Controller_Action
     public function categoriesAction()
     {
     	$this->_helper->layout->setLayout('layout-admin-pages');
+    	$layout = Zend_Layout::getMvcInstance();
+    	$layout->title = 'Редактирование категорий';
     	$this->view->categoriesListRoot = Application_Model_Categories::stmt2selectEncode(
     		$this->_categories->getCategoriesRoot(), 'name', 'name');
     	$this->view->categoriesList = Application_Model_Categories::stmt2selectEncode(
@@ -379,5 +383,17 @@ class AdminController extends Zend_Controller_Action
     	$this->getResponse()
     		->setHttpResponseCode(204);
     }
-}
 
+    /**
+     * Вызов страницы для работы с mongoDB
+     * 
+     * @link http://{HOST}/admin/dump
+     *
+     */
+    public function dumpAction()
+    {
+    	$this->_helper->layout->setLayout('layout-admin-pages');
+    	$layout = Zend_Layout::getMvcInstance();
+    	$layout->title = 'Редактирование служебной информации';
+    }
+}

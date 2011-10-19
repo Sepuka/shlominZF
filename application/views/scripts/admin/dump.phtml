@@ -1,0 +1,18 @@
+<script language="javascript" type="text/javascript">
+Ext.onReady(function() {
+	var viewport = Ext.create('Ext.container.Viewport', {
+		layout: 'border',
+		items: [{
+            region: 'north',
+            items: linksBar
+    	},{
+			region: 'west',
+			itemId: 'westMenuPanel',
+			width: 200,
+		},{
+			region: 'center',
+			itemId: 'centerMenuPanel'
+		}]
+	});
+});
+</script>

@@ -30,6 +30,17 @@ Ext.onReady(function() {
 		}
 	});
 
+	var DumpIcon = new Ext.create('Ext.window.Window', AbstractIcon);
+	DumpIcon.setTitle('MongoDB');
+	DumpIcon.update('Редактирование служебной информации');
+	DumpIcon.addListener('activate', function(self, opt) {
+		if (self.firstShow) {
+			self.firstShow--;
+		} else {
+			window.location = '/admin/dump';
+		}
+	});
+
 	var BackupIcon = new Ext.create('Ext.window.Window', AbstractIcon);
 	BackupIcon.setTitle('Настройка архивирования');
 	BackupIcon.update('Создание и редактирование правил для работы с бекапами');
@@ -73,5 +84,6 @@ Ext.onReady(function() {
 	// Установка координат для окон
 	CategoriesIcon.setPosition(getCoordinateX(), coordinateY, false);
 	ArticlesIcon.setPosition(getCoordinateX(), coordinateY, false);
+	DumpIcon.setPosition(getCoordinateX(), coordinateY, false);
 	BackupIcon.setPosition(getCoordinateX(), coordinateY, false);
 });

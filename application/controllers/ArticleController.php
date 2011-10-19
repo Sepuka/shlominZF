@@ -7,6 +7,7 @@
 class ArticleController extends Zend_Controller_Action
 {
     protected $_articleModel    = null;
+    protected $_config          = null;
 
 	/**
 	 * Обработка вызовов несуществующих действий
@@ -23,6 +24,7 @@ class ArticleController extends Zend_Controller_Action
     public function init()
     {
         $this->_articleModel = new Application_Model_Articles();
+        $this->_config = new Zend_Config_Ini(CONFIG_FILE, APPLICATION_ENV);
     	$this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 
@@ -50,5 +52,13 @@ class ArticleController extends Zend_Controller_Action
         }
         $layout->articleHeadline = $article->headline;
         $layout->articleContent = $article->content;
+
+        $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+        $contacts = $mongoDB->findOne('contacts');
+        if (! is_null($contacts))
+            $layout->contacts = $contacts['value'];
+        $tags = $mongoDB->findOne('tags');
+        if (! is_null($tags))
+            $layout->tags = $tags['value'];
     }
 }
