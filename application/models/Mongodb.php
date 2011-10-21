@@ -1,5 +1,6 @@
 <?php
 class MongoDBException extends Exception {}
+class MongoDBKeyNotFound extends MongoDBException {}
 
 class Application_Model_Mongodb
 {
@@ -39,9 +40,9 @@ class Application_Model_Mongodb
      * @param integer $limit
      * @return MongoCursor
      */
-    public function find($key, $values=null, $limit=null)
+    public function find($key=null, $values=null, $limit=null)
     {
-        $keys = array('key' => $key);
+        $keys = (is_null($key)) ? array() : array('key' => $key);
         $values = (is_null($values)) ? array() : $values;
         $cursor = $this->_coll->find($keys, $values);
         if ($limit)
@@ -63,5 +64,21 @@ class Application_Model_Mongodb
         $keys = array('key' => $key);
         $values = (is_null($values)) ? array() : $values;
         return $this->_coll->findOne($keys, $values);
+    }
+
+    /**
+     * Обновление документа
+     *
+     * @param string $key
+     * @param string $value
+     */
+    public function update($key, $value)
+    {
+        $cursor = $this->findOne($key);
+        if (is_null($cursor))
+            throw new MongoDBKeyNotFound('Не удалось найти ключ ' . $key);
+        $cursor['value'] = $value;
+        $cursor['changeTime'] = date('Y-m-d H:i:s');
+        $this->_coll->save($cursor);
     }
 }

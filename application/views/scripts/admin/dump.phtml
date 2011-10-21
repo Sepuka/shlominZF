@@ -1,5 +1,161 @@
 <script language="javascript" type="text/javascript">
 Ext.onReady(function() {
+    var currentDumpKey = 0;
+
+    var loadMask = new Ext.LoadMask(
+	    Ext.getBody(),
+	    {
+	        msg: 'Пожалуйста, подождите. Идет загрузка ...'
+	    });
+
+    var toolbar = Ext.create('Ext.toolbar.Toolbar', {
+		items: [{
+			itemId: 'key',
+			xtype: 'textfield',
+			fieldLabel: 'Уникальный ключ',
+			width: 400
+		},{
+			xtype: 'tbseparator'
+		},{
+			xtype: 'button',
+			text: 'Сохранить',
+			handler: function() {
+				loadMask.show();
+				toolbar.disable(true);
+				Ext.Ajax.request({
+					url: '/ajax/dumpSetDocument',
+					method: 'POST',
+                    params: {
+                        value: htmlEditor.getValue(),
+                        key: toolbar.getComponent('key').getValue()
+                    },
+                    success: function(answer) {
+                        //alert(answer.responseText);
+                    },
+                    failure: function() {
+                    	loadMask.hide();
+                        Ext.Msg.alert("Ошибка", "Неудалось сохранить данные");
+                    },
+                    callback: function() {
+                        loadMask.hide();
+                        toolbar.enable(true);
+                        comboBoxStore.load();
+                    }
+				})
+			}
+		},{
+			xtype: 'button',
+			text: 'Обновить',
+			handler: function() {
+                loadArticle(currentDumpKey);
+            }
+		},{
+			xtype: 'button',
+			text: 'Удалить',
+			handler: function() {
+                if (currentDumpKey > 0) {
+                    loadMask.show();
+				    toolbar.disable(true);
+				    Ext.Ajax.request({
+    					url: URLarticlesRemove,
+    					method: 'POST',
+                        params: {
+                            key: currentDumpKey
+                        },
+                        success: function(answer) {
+                            htmlEditor.setValue();
+                            toolbar.getComponent('key').setValue();
+                            currentDumpKey = 0;
+                        },
+                        failure: function() {
+                        	loadMask.hide();
+                            Ext.Msg.alert("Ошибка", "Неудалось удалить статью");
+                        },
+                        callback: function() {
+                            loadMask.hide();
+                            toolbar.enable(true);
+                            comboBoxStore.load();
+                        }
+    				})
+                }
+                else
+                    Ext.Msg.alert('Ошибка', 'Выберите статью для удаления!');
+			}
+		}]
+	});
+
+	function loadArticle(key)
+	{
+	    loadMask.show();
+	    toolbar.disable(true);
+	    Ext.Ajax.request({
+            url: '/ajax/dumpGetDocument',
+        method: 'GET',
+        params: {
+            key: key,
+        },
+        success: function(answer) {
+            // Ответ приходит в виде JSON-массива
+            answer = Ext.JSON.decode(answer.responseText);
+            htmlEditor.setValue(answer['value']);
+            toolbar.items.get('key').setValue(answer['key']);
+        },
+        failure: function() {
+            Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+        },
+        callback: function() {
+            loadMask.hide();
+            toolbar.enable(true);
+        }
+        })
+	}
+
+    Ext.define('comboBoxModel', {
+        extend: 'Ext.data.Model',
+        fields: [
+            {name: 'key', type: 'string'},
+        ]
+    });
+
+    var comboBoxStore = Ext.create('Ext.data.Store', {
+        model: 'comboBoxModel',
+        proxy: {
+            type: 'ajax',
+            url: '/ajax/dumpKeysList',
+            reader: {
+                type: 'json',
+                root: 'keys'
+            }
+        },
+        autoLoad: true
+    });
+
+    var mongoKeyTpl = new Ext.XTemplate(
+    '<tpl for=".">',
+        '<div style="margin-bottom: 6px;" class="mongoKey">',
+          '<span>{key}</span>',
+        '</div>',
+    '</tpl>'
+    );
+
+    var keysList = Ext.create('Ext.view.View', {
+        width: 200,
+        autoScroll: true,
+        itemSelector: 'div.mongoKey',
+        store: comboBoxStore,
+        tpl: mongoKeyTpl,
+        listeners: {
+            itemclick: function(obj, record, item, index, e, eOpts) {
+                currentDumpKey = record.get('key');
+                loadArticle(record.get('key'));
+            }
+        }
+    });
+
+	var htmlEditor = Ext.create('Ext.form.HtmlEditor', {
+		
+	});
+
 	var viewport = Ext.create('Ext.container.Viewport', {
 		layout: 'border',
 		items: [{
@@ -9,10 +165,18 @@ Ext.onReady(function() {
 			region: 'west',
 			itemId: 'westMenuPanel',
 			width: 200,
+			title: 'Ключи служебной информации',
+			items: keysList
 		},{
 			region: 'center',
-			itemId: 'centerMenuPanel'
+			itemId: 'centerMenuPanel',
+			items: [htmlEditor],
+			bbar: toolbar
 		}]
 	});
+
+	keysList.setHeight(viewport.getComponent('westMenuPanel').getHeight());
+	htmlEditor.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
+	htmlEditor.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
 });
 </script>
