@@ -163,4 +163,72 @@ class AjaxController extends Zend_Controller_Action
         $this->getResponse()
             ->setHttpResponseCode(204);
     }
+
+    /**
+     * Добавление документа в MongoDB
+     *
+     * @return void
+     */
+    public function dumpadddocumentAction()
+    {
+        if (! $this->getRequest()->isPost())
+            return $this->getResponse()->setHttpResponseCode(415);
+        if (is_null($key = $this->getRequest()->getPost('key')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param key');
+        if (is_null($value = $this->getRequest()->getPost('value')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param value');
+
+        try {
+            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+            $mongoDB->replace($key, $value);
+         } catch (MongoDBInsertException $ex) {
+             return $this->getResponse()
+                ->setHttpResponseCode(500)
+                ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+                ->appendBody(Zend_Json::encode(
+                    $answer = array(
+                        'success'   => false,
+                        'key'       => $ex->getMessage(),
+                        'value'     => $ex->getTraceAsString())
+                    ));
+         }
+        $this->getResponse()
+            ->setHttpResponseCode(204);
+    }
+
+    /**
+     * Удаление документа в MongoDB
+     *
+     * @return void
+     */
+    public function dumpdeldocumentAction()
+    {
+        if (! $this->getRequest()->isPost())
+            return $this->getResponse()->setHttpResponseCode(415);
+        if (is_null($key = $this->getRequest()->getPost('key')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param key');
+
+        try {
+            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+            $mongoDB->remove($key);
+         } catch (MongoDBRemoveException $ex) {
+             return $this->getResponse()
+                ->setHttpResponseCode(500)
+                ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+                ->appendBody(Zend_Json::encode(
+                    $answer = array(
+                        'success'   => false,
+                        'key'       => $ex->getMessage(),
+                        'value'     => $ex->getTraceAsString())
+                    ));
+         }
+        $this->getResponse()
+            ->setHttpResponseCode(204);
+    }
 }

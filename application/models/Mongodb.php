@@ -1,6 +1,8 @@
 <?php
 class MongoDBException extends Exception {}
 class MongoDBKeyNotFound extends MongoDBException {}
+class MongoDBInsertException extends MongoDBException {}
+class MongoDBRemoveException extends MongoDBException {}
 
 class Application_Model_Mongodb
 {
@@ -77,10 +79,51 @@ class Application_Model_Mongodb
     {
         $cursor = $this->findOne($oldkey);
         if (is_null($cursor))
-            throw new MongoDBKeyNotFound('Не удалось найти ключ ' . $oldkey);
+            throw new MongoDBKeyNotFound('Не удалось найти документ ' . $oldkey);
         $cursor['value'] = $value;
         $cursor['key'] = $newkey;
         $cursor['changeTime'] = date('Y-m-d H:i:s');
         $this->_coll->save($cursor);
+    }
+
+    /**
+     * Создание/обновление нового документа
+     *
+     * @throws MongoDBInsertException
+     * @param string $key
+     * @param string $value
+     */
+    public function replace($key, $value)
+    {
+        if (empty($key))
+            throw new MongoDBInsertException('Ключ документа не может быть пустым!');
+        $cursor = $this->findOne($key);
+        if (is_null($cursor)) {
+            $item = array(
+                'key'       => $key,
+                'value'     => $value,
+                'changeTime'=>date('Y-m-d H:i:s')
+            );
+            if (! $this->_coll->insert($item))
+                throw new MongoDBInsertException('Ошибка создания документа ' . $key);
+        } else {
+        	$cursor['value'] = $value;
+            $cursor['changeTime'] = date('Y-m-d H:i:s');
+            $this->_coll->save($cursor);
+        }
+    }
+
+    /**
+     * Удаление документа
+     *
+     * @throws MongoDBRemoveException
+     * @param string $key
+     */
+    public function remove($key)
+    {
+        $criteriea = array('key' => $key);
+        $options = array('justOne' => true);
+        if (! $this->_coll->remove($criteriea, $options))
+            throw new MongoDBRemoveException('Ошибка удаления документа ' . $key);
     }
 }

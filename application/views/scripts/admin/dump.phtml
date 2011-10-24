@@ -9,11 +9,11 @@ Ext.onReady(function() {
 	    });
 
     var toolbar = Ext.create('Ext.toolbar.Toolbar', {
-		items: [{
+		items: [
+		{
 			itemId: 'key',
 			xtype: 'textfield',
-			fieldLabel: 'Уникальный ключ',
-			width: 400
+			fieldLabel: 'имя ключа'
 		},{
 			xtype: 'tbseparator'
 		},{
@@ -55,11 +55,11 @@ Ext.onReady(function() {
 			xtype: 'button',
 			text: 'Удалить',
 			handler: function() {
-                if (currentDumpKey > 0) {
+                if (currentDumpKey != 0) {
                     loadMask.show();
 				    toolbar.disable(true);
 				    Ext.Ajax.request({
-    					url: URLarticlesRemove,
+    					url: '/ajax/dumpDelDocument',
     					method: 'POST',
                         params: {
                             key: currentDumpKey
@@ -69,9 +69,9 @@ Ext.onReady(function() {
                             toolbar.getComponent('key').setValue();
                             currentDumpKey = 0;
                         },
-                        failure: function() {
-                        	loadMask.hide();
-                            Ext.Msg.alert("Ошибка", "Неудалось удалить статью");
+                        failure: function(failure) {
+                    	   answer = Ext.JSON.decode(failure.responseText);
+                            Ext.Msg.alert(answer['key'], answer['value']);
                         },
                         callback: function() {
                             loadMask.hide();
@@ -81,8 +81,38 @@ Ext.onReady(function() {
     				})
                 }
                 else
-                    Ext.Msg.alert('Ошибка', 'Выберите статью для удаления!');
+                    Ext.Msg.alert('Ошибка', 'Выберите документ для удаления!');
 			}
+		},{
+		    xtype: 'tbseparator'
+		},{
+		    xtype: 'button',
+		    text: 'Создать новый',
+		    handler: function() {
+				loadMask.show();
+				toolbar.disable(true);
+				Ext.Ajax.request({
+					url: '/ajax/dumpAddDocument',
+					method: 'POST',
+                    params: {
+                        value: htmlEditor.getValue(),
+                        key: toolbar.getComponent('key').getValue()
+                    },
+                    success: function(answer) {
+                        // Сохраним новый ключ
+                        currentDumpKey = toolbar.getComponent('key').getValue()
+                    },
+                    failure: function(failure) {
+                    	answer = Ext.JSON.decode(failure.responseText);
+                        Ext.Msg.alert(answer['key'], answer['value']);
+                    },
+                    callback: function() {
+                        loadMask.hide();
+                        toolbar.enable(true);
+                        comboBoxStore.load();
+                    }
+				})
+		    }
 		}]
 	});
 
