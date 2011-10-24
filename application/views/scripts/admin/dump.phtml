@@ -27,14 +27,16 @@ Ext.onReady(function() {
 					method: 'POST',
                     params: {
                         value: htmlEditor.getValue(),
-                        key: toolbar.getComponent('key').getValue()
+                        newkey: toolbar.getComponent('key').getValue(),
+                        oldkey: currentDumpKey
                     },
                     success: function(answer) {
-                        //alert(answer.responseText);
+                        // Сохраним новый ключ
+                        currentDumpKey = toolbar.getComponent('key').getValue()
                     },
-                    failure: function() {
-                    	loadMask.hide();
-                        Ext.Msg.alert("Ошибка", "Неудалось сохранить данные");
+                    failure: function(failure) {
+                    	answer = Ext.JSON.decode(failure.responseText);
+                        Ext.Msg.alert(answer['key'], answer['value']);
                     },
                     callback: function() {
                         loadMask.hide();

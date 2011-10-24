@@ -69,15 +69,17 @@ class Application_Model_Mongodb
     /**
      * Обновление документа
      *
-     * @param string $key
+     * @param string $newkey
+     * @param string $oldkey
      * @param string $value
      */
-    public function update($key, $value)
+    public function update($newkey, $oldkey, $value)
     {
-        $cursor = $this->findOne($key);
+        $cursor = $this->findOne($oldkey);
         if (is_null($cursor))
-            throw new MongoDBKeyNotFound('Не удалось найти ключ ' . $key);
+            throw new MongoDBKeyNotFound('Не удалось найти ключ ' . $oldkey);
         $cursor['value'] = $value;
+        $cursor['key'] = $newkey;
         $cursor['changeTime'] = date('Y-m-d H:i:s');
         $this->_coll->save($cursor);
     }

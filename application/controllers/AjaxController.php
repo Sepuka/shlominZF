@@ -74,10 +74,9 @@ class AjaxController extends Zend_Controller_Action
                     )));
         }
         $keys = $mongoDB->find();
-        $answer = array('keys' => array(
-            'success'   => true,
-            'total'     => $keys->count()
-        ));
+        $answer = array('keys' => array());
+        $answer['keys'][] = array('success' => true);
+        $answer['keys'][] = array('total' => $keys->count());
         foreach ($keys as $key)
             $answer['keys'][] = array('key' => $key['key']);
         $this->getResponse()
@@ -134,22 +133,33 @@ class AjaxController extends Zend_Controller_Action
     {
         if (! $this->getRequest()->isPost())
             return $this->getResponse()->setHttpResponseCode(415);
-        if (is_null($key = $this->getRequest()->getPost('key')))
+        if (is_null($newkey = $this->getRequest()->getPost('newkey')))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
-                ->appendBody('expect param key');
+                ->appendBody('expect param newkey');
+        if (is_null($oldkey = $this->getRequest()->getPost('oldkey')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param oldkey');
         if (is_null($value = $this->getRequest()->getPost('value')))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
                 ->appendBody('expect param value');
 
-        $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
         try {
-            $mongoDB->update($key, $value);
-        } catch (MongoDBKeyNotFound $ex) {
-            return $this->getResponse()
-                ->setHttpResponseCode(400);
-        }
+            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+            $mongoDB->update($newkey, $oldkey, $value);
+         } catch (MongoDBException $ex) {
+             return $this->getResponse()
+                ->setHttpResponseCode(500)
+                ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+                ->appendBody(Zend_Json::encode(
+                    $answer = array(
+                        'success'   => false,
+                        'key'       => $ex->getMessage(),
+                        'value'     => $ex->getTraceAsString())
+                    ));
+         }
         $this->getResponse()
             ->setHttpResponseCode(204);
     }
