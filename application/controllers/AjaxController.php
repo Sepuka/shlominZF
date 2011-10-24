@@ -49,6 +49,9 @@ class AjaxController extends Zend_Controller_Action
 
     /**
      * Получение списка всех ключей из MongoDB
+     * 
+     * В левой части страницы элемент Ext.view.View загружает список ключей
+     * по адресу /ajax/dumpKeysList
      *
      * @return void
      */
@@ -57,7 +60,15 @@ class AjaxController extends Zend_Controller_Action
         if (! $this->getRequest()->isGet())
             return $this->getResponse()->setHttpResponseCode(415);
 
-        $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+        try {
+            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+        } catch (MongoDBException $ex) {
+            $error = sprintf('<font color="red">%s</font>', $ex->getMessage());
+            return $this->getResponse()
+                ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+                ->appendBody(Zend_Json::encode(
+                    $answer = array('keys' => array('key' => $error))));
+        }
         $keys = $mongoDB->find();
         $answer = array('keys');
         foreach ($keys as $key)
