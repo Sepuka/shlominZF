@@ -67,10 +67,17 @@ class AjaxController extends Zend_Controller_Action
             return $this->getResponse()
                 ->setHeader('Content-Type', 'application/json; charset=UTF-8')
                 ->appendBody(Zend_Json::encode(
-                    $answer = array('keys' => array('key' => $error))));
+                    $answer = array('keys' => array(
+                        'success'   => false,
+                        'key'       => $error,
+                        'total'     => 1)
+                    )));
         }
         $keys = $mongoDB->find();
-        $answer = array('keys');
+        $answer = array('keys' => array(
+            'success'   => true,
+            'total'     => $keys->count()
+        ));
         foreach ($keys as $key)
             $answer['keys'][] = array('key' => $key['key']);
         $this->getResponse()
@@ -93,7 +100,19 @@ class AjaxController extends Zend_Controller_Action
                 ->setHttpResponseCode(400)
                 ->appendBody('expect param key');
 
-        $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+        try {
+            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+        } catch (MongoDBException $ex) {
+            return $this->getResponse()
+                ->setHttpResponseCode(500)
+                ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+                ->appendBody(Zend_Json::encode(
+                    $answer = array(
+                        'success'   => false,
+                        'key'       => $ex->getMessage(),
+                        'value'     => $ex->getTraceAsString())
+                    ));
+        }
         $cursor = $mongoDB->findOne($key);
         if (is_null($cursor))
             return $this->getResponse()

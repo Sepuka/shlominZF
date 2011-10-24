@@ -99,13 +99,16 @@ Ext.onReady(function() {
             answer = Ext.JSON.decode(answer.responseText);
             htmlEditor.setValue(answer['value']);
             toolbar.items.get('key').setValue(answer['key']);
+            toolbar.enable(true);
+            htmlEditor.setDisabled(false);
         },
-        failure: function() {
-            Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+        failure: function(failure) {
+            answer = Ext.JSON.decode(failure.responseText);
+            Ext.Msg.alert(answer['key'], answer['value']);
+            htmlEditor.setDisabled(true);
         },
         callback: function() {
             loadMask.hide();
-            toolbar.enable(true);
         }
         })
 	}
@@ -124,7 +127,9 @@ Ext.onReady(function() {
             url: '/ajax/dumpKeysList',
             reader: {
                 type: 'json',
-                root: 'keys'
+                root: 'keys',
+                successProperty: 'success',
+                totalProperty: 'total'
             }
         },
         autoLoad: true
