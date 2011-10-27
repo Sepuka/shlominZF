@@ -80,7 +80,7 @@ class Application_Model_Mongodb
         $cursor = $this->findOne($oldkey);
         if (is_null($cursor))
             throw new MongoDBKeyNotFound('Не удалось найти документ ' . $oldkey);
-        $cursor['value'] = $value;
+        $cursor['value'] = self::removeWrongChars($value);
         $cursor['key'] = $newkey;
         $cursor['changeTime'] = date('Y-m-d H:i:s');
         $this->_coll->save($cursor);
@@ -101,7 +101,7 @@ class Application_Model_Mongodb
         if (is_null($cursor)) {
             $item = array(
                 'key'       => $key,
-                'value'     => $value,
+                'value'     => self::removeWrongChars($value),
                 'changeTime'=>date('Y-m-d H:i:s')
             );
             if (! $this->_coll->insert($item))
@@ -125,5 +125,16 @@ class Application_Model_Mongodb
         $options = array('justOne' => true);
         if (! $this->_coll->remove($criteriea, $options))
             throw new MongoDBRemoveException('Ошибка удаления документа ' . $key);
+    }
+
+    /**
+     * Удаление ненужных символов перед вставкой в БД
+     *
+     * @param string $str
+     * @return string
+     */
+    public static function removeWrongChars($str)
+    {
+        return str_replace(array(chr(10), chr(13)), '', $str);
     }
 }
