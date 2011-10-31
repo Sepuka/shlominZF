@@ -27,7 +27,7 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
 	 * @param mixed $articleID
 	 * @return array
 	 */
-	public function getTreeArticles($articleID)
+	public function getTreeArticles($articleID=null)
 	{
 	    if (is_numeric($articleID)) {
             $article = $this->getArticleByID($articleID);

@@ -167,7 +167,7 @@ class AdminController extends Zend_Controller_Action
 
     	$this->getResponse()
 			->setHeader('Content-Type', 'application/json; charset=UTF-8')
-			->appendBody($this->_articles->getTreeArticles());
+			->appendBody(Zend_Json::encode($this->_articles->getTreeArticles()));
     }
 
     /**
