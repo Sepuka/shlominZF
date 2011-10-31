@@ -33,6 +33,10 @@ class AjaxController extends Zend_Controller_Action
 
     /**
      * Получение дерева статей в формате JSON
+     * 
+     * Запрос этого метода может происходить из админки, с главной страницы сайта
+     * или со страницы конкретной статьи (/article/37). В последнем случае нам
+     * нужен идентификатор статьи (articleID) чтобы раскрыть дерево в нужном месте.
      *
      * @return void
      */
@@ -40,11 +44,15 @@ class AjaxController extends Zend_Controller_Action
     {
         if (! $this->getRequest()->isGet())
             return $this->getResponse()->setHttpResponseCode(415);
+        if ($articleID = $this->getRequest()->getParam('articleID'))
+            $articleID = array_pop(explode('/', $articleID));
+        else
+            $articleID = null;
 
         $articlesModel = new Application_Model_Articles();
         $this->getResponse()
             ->setHeader('Content-Type', 'application/json; charset=UTF-8')
-            ->appendBody($articlesModel->getTreeArticles());
+            ->appendBody(Zend_Json::encode($articlesModel->getTreeArticles($articleID)));
     }
 
     /**
@@ -229,6 +237,77 @@ class AjaxController extends Zend_Controller_Action
                     ));
          }
         $this->getResponse()
+            ->setHttpResponseCode(204);
+    }
+
+    /**
+     * Работа со статьями
+     */
+
+    /**
+     * Сохранение статьи
+     *
+     * @return void
+     */
+    public function articlessaveAction()
+    {
+        if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+
+        if (is_null($id = $this->getRequest()->getPost('id')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param id');
+        if (is_null($categoryID = $this->getRequest()->getPost('categoryID')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param categoryID');
+        if (is_null($headline = $this->getRequest()->getPost('headline')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param headline');
+        if (is_null($content = $this->getRequest()->getPost('content')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param content');
+
+    	try {
+    	   Application_Model_Articles::updateArticle($id, $categoryID, $headline, $content);
+    	} catch (ArticleException $ex) {
+    	    return $this->getResponse()
+                ->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
+    	    return $this->getResponse()
+                ->setHttpResponseCode(500);
+    	}
+    	$this->getResponse()
+            ->setHttpResponseCode(204);
+    }
+
+    /**
+     * Удаление статьи
+     *
+     * @return void
+     */
+    public function articlesremoveAction()
+    {
+
+        if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+
+        if (is_null($id = $this->getRequest()->getPost('id')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param id');
+
+    	try {
+    	   Application_Model_Articles::removeArticle($id);
+    	} catch (ArticleException $ex) {
+    	    return $this->getResponse()->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
+    	    return $this->getResponse()->setHttpResponseCode(500);
+    	}
+    	$this->getResponse()
             ->setHttpResponseCode(204);
     }
 }

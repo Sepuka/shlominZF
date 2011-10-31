@@ -28,6 +28,10 @@ Ext.onReady(function() {
 		proxy: {
         	type: 'ajax',
         	url : '/ajax/treeArticles',
+        	// Передаем идентификатор текущей статьи для раскрытия дерева в нужном месте
+        	extraParams: {
+        	    articleID: window.location.pathname
+        	},
         	reader: {
             	type: 'json',
             	root: 'children',

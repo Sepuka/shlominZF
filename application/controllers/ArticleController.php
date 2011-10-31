@@ -30,6 +30,9 @@ class ArticleController extends Zend_Controller_Action
 
     /**
      * Действие показывающее запрошенную статью
+     * 
+     * Обрабатывает URL вида /article/37 которые преобразуются в index.php
+     * с помощью маршрутов из application/configs/application.ini
      *
      * @return void
      */

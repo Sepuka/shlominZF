@@ -53,24 +53,54 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	}
 
 	/**
+	 * Получение родословной категории
+	 *
+	 * @param mixed $row
+	 * @param array $branch
+	 * @return array
+	 */
+	public function getBranchCategory($row, $branch = array())
+	{
+	    if (is_numeric($row)) {
+            if (is_null($current = $this->find($row)->current()))
+                return $branch;
+	    }
+        elseif ($row instanceof Zend_Db_Table_Row)
+            $current = $row;
+        else
+            return $branch;
+        $branch[] = $current->id;
+        if (! is_null($parent = $current->findParentRow('Application_Model_Categories', 'childCategory')))
+            return $this->getBranchCategory($parent, $branch);
+	    else
+            return $branch;
+	}
+
+	/**
 	 * Получение дерева статей и категорий
 	 *
 	 * @param string $parent
-	 * @param inteher $articleID
+	 * @param integer $articleID
 	 * @return array
 	 */
-	public function getCategoriesTree($parent='', $articleID=0)
+	public function getCategoriesTree($parent='', $articleID=0, $branchCategories=array())
 	{
 		$tree = array();
 		$select = $this->select()
-            ->where('parent=?', $parent);
+            ->where('parent=?', $parent)
+            ->order('sequence ASC');
+
+        if (is_array($branchCategories))
+            $forExpanded = array_shift($branchCategories);
+        else $forExpanded = false;
+
 		# Получаем папки нужной категории
 		foreach ($this->fetchAll($select) as $row) {
 			$tree[] = array(
                 'id'		=> $row['id'],
 				'text'		=> $row['name'],
-				'expanded'	=> false,
-				'children'	=> $this->getCategoriesTree($row['name'], $row['id']));
+				'expanded'	=> ($forExpanded == $row['id']) ? true : false,
+				'children'	=> $this->getCategoriesTree($row['name'], $row['id'], $branchCategories));
 		}
 		# Получаем статьи нужной категории
 		$stmt = $this->getAdapter()
@@ -97,7 +127,7 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	{
 		return $this->select()
 				->where('parent=?', '')
-				->order('name ASC')
+				->order('sequence ASC')
 				->query();
 	}
 
@@ -108,26 +138,7 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	 */
 	public function getCategories()
 	{
-	    return $this->select()->query();
-	}
-
-	/**
-	 * Получение списка категорий которые могут быть родителями
-	 *
-	 * @return string
-	 */
-	public function getCategoriesFolder()
-	{
-		$stmt = $this->select()
-				->distinct()
-				->from($this->_name, 'name')
-				->where('folder=1')
-				->order('name ASC')
-				->query();
-		$output = array();
-		foreach ($stmt->fetchAll() as $value)
-			$output[] = sprintf('["%s","%s"]', $value['name'], $value['name']);
-		return sprintf('[%s]', implode(',', $output));
+	    return $this->select()->order('name ASC')->query();
 	}
 
 	/**

@@ -9,10 +9,10 @@ Ext.onReady(function() {
 	// Переменная для хранения идентификатора выбранной категории
 	var categoryID = 0;
 
-	var URLarticlesSave = '/admin/articlesSave';
+	var URLarticlesSave = '/ajax/articlesSave';
 	var URLarticlesView = '/admin/articlesView';
 	var URLarticlesGet = '/admin/getArticle';
-	var URLarticlesRemove = '/admin/articlesRemove';
+	var URLarticlesRemove = '/ajax/articlesRemove';
 
 	var loadMask = new Ext.LoadMask(
 	    Ext.getBody(),
@@ -111,7 +111,8 @@ Ext.onReady(function() {
                     callback: function() {
                         loadMask.hide();
                         toolbar.enable(true);
-                        treeArticlesStore.load();
+                        // TODO: баг ExtJS
+                        //treeArticlesStore.load();
                     }
 				})
 			}
@@ -149,7 +150,8 @@ Ext.onReady(function() {
                         callback: function() {
                             loadMask.hide();
                             toolbar.enable(true);
-                            treeArticlesStore.load();
+                            // TODO: баг ExtJS
+                            // treeArticlesStore.load();
                         }
     				})
                 }
