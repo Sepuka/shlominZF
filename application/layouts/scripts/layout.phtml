@@ -3,12 +3,14 @@ echo $this->doctype();
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Домашний сайт на домашнем хостинге</title>
-  <?=$this->headLink()->appendStylesheet('/extjs/resources/css/ext-all.css')?>
-  <?=$this->headScript()->appendFile('/extjs/bootstrap.js')?>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Домашний сайт на домашнем хостинге</title>
+    <?=$this->headLink()->appendStylesheet('/extjs/resources/css/ext-all.css')
+        ->appendStylesheet('/prettify/prettify.css')?>
+    <?=$this->headScript()->appendFile('/extjs/bootstrap.js')
+        ->appendFile('/prettify/prettify.js')?>
 </head>
-<body>
+<body onload="prettyPrint()">
 <script language="javascript" type="text/javascript">
 Ext.onReady(function() {
     Ext.define('topDir', {
