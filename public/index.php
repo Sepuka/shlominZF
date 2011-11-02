@@ -7,8 +7,9 @@ defined('APPLICATION_PATH')
 // Define application environment
 defined('APPLICATION_ENV')
     || define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production'));
-
-require_once(dirname(__FILE__) . '/../constants.post.php');
+    
+defined('CONFIG_FILE')
+    || define('CONFIG_FILE', APPLICATION_PATH . '/configs/application.ini');
 
 // Ensure library/ is on include_path
 set_include_path(implode(PATH_SEPARATOR, array(
@@ -19,13 +20,20 @@ set_include_path(implode(PATH_SEPARATOR, array(
 /** Zend_Application */
 require_once 'Zend/Application.php';
 
+/** Загрузка собственного обработчика конфигов */
+require_once APPLICATION_PATH . '/models/MemcachedConfig.php';
+require_once 'Zend/Cache/Backend/Memcached.php';
+require_once 'Zend/Cache/Core.php';
+require_once 'Zend/Cache.php';
+
+$config = new Application_Model_MemcachedConfig(CONFIG_FILE, APPLICATION_ENV);
 // Create application, bootstrap, and run
 $application = new Zend_Application(
     APPLICATION_ENV,
-    APPLICATION_PATH . '/configs/application.ini'
+    $config
 );
 
-$config = new Zend_Config_Ini(CONFIG_FILE, APPLICATION_ENV);
+// Добавление маршрутов
 $router = Zend_Controller_Front::getInstance()->getRouter();
 $router->addConfig($config, 'routes');
 unset($config);

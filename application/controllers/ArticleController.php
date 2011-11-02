@@ -24,7 +24,7 @@ class ArticleController extends Zend_Controller_Action
     public function init()
     {
         $this->_articleModel = new Application_Model_Articles();
-        $this->_config = new Zend_Config_Ini(CONFIG_FILE, APPLICATION_ENV);
+        $this->_config = new Application_Model_MemcachedConfig(CONFIG_FILE, APPLICATION_ENV);
     	$this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 

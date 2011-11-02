@@ -17,7 +17,7 @@ class IndexController extends Zend_Controller_Action
 
     public function init()
     {
-        $this->_config = new Zend_Config_Ini(CONFIG_FILE, APPLICATION_ENV);
+        $this->_config = new Application_Model_MemcachedConfig(CONFIG_FILE, APPLICATION_ENV);
     }
 
     public function indexAction()

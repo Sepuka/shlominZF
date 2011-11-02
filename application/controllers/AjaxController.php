@@ -27,7 +27,7 @@ class AjaxController extends Zend_Controller_Action
         if (! $this->getRequest()->isXmlHttpRequest())
             return $this->getResponse()->setHttpResponseCode(415);
 
-    	$this->_config = new Zend_Config_Ini(CONFIG_FILE, APPLICATION_ENV);
+    	$this->_config = new Application_Model_MemcachedConfig(CONFIG_FILE, APPLICATION_ENV);
     	$this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 
