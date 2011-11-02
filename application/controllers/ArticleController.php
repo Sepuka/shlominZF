@@ -54,7 +54,7 @@ class ArticleController extends Zend_Controller_Action
                 ->setHttpResponseCode(404);
         }
         $layout->articleHeadline = $article->headline;
-        $layout->articleContent = $article->content;
+        $layout->articleContent = ($this->_config->prettify) ? $this->_prettify($article->content) : $article->content;
 
         $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
         $contacts = $mongoDB->findOne('contacts');
@@ -63,5 +63,10 @@ class ArticleController extends Zend_Controller_Action
         $tags = $mongoDB->findOne('tags');
         if (! is_null($tags))
             $layout->tags = $tags['value'];
+    }
+
+    protected function _prettify($text)
+    {
+        return sprintf('<code class="prettyprint">%s</code>', $text);
     }
 }
