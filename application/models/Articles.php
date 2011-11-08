@@ -78,6 +78,9 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
 			throw new ArticleException('id and categoryID is empty!');
 		if (empty($headline))
             throw new ArticleException('headline is empty!');
+        // Удаление переносов строк
+        $content = str_replace(array(chr(10), chr(13)), '', $content);
+        $content = str_replace("'", '"', $content);
         # Если установлен id, то статья редактируется
         if ($id) {
     		if (is_null($article = $model->find($id)->current()))
