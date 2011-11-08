@@ -27,7 +27,7 @@ class AjaxController extends Zend_Controller_Action
         if (! $this->getRequest()->isXmlHttpRequest())
             return $this->getResponse()->setHttpResponseCode(415);
 
-    	$this->_config = new Application_Model_MemcachedConfig(CONFIG_FILE, APPLICATION_ENV);
+    	$this->_config = Application_Model_MemcachedConfig::getInstance();
     	$this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 
@@ -69,9 +69,10 @@ class AjaxController extends Zend_Controller_Action
             return $this->getResponse()->setHttpResponseCode(415);
 
         try {
-            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->docs->collection,
+                'localhost', $this->_config->mongo->conn->user, $this->_config->mongo->conn->pass);
         } catch (MongoDBException $ex) {
-            $error = sprintf('<font color="red">%s</font>', $ex->getMessage());
+            $error = sprintf('<font color="red">%s</font><br>', $ex->getMessage());
             return $this->getResponse()
                 ->setHeader('Content-Type', 'application/json; charset=UTF-8')
                 ->appendBody(Zend_Json::encode(
@@ -108,7 +109,8 @@ class AjaxController extends Zend_Controller_Action
                 ->appendBody('expect param key');
 
         try {
-            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->docs->collection,
+                'localhost', $this->_config->mongo->conn->user, $this->_config->mongo->conn->pass);
         } catch (MongoDBException $ex) {
             return $this->getResponse()
                 ->setHttpResponseCode(500)
@@ -133,99 +135,39 @@ class AjaxController extends Zend_Controller_Action
     }
 
     /**
-     * Сохранение документа в MongoDB
+     * Обновление документа в MongoDB
      *
      * @return void
      */
-    public function dumpsetdocumentAction()
+    public function dumpupdatedocumentAction()
     {
         if (! $this->getRequest()->isPost())
             return $this->getResponse()->setHttpResponseCode(415);
-        if (is_null($newkey = $this->getRequest()->getPost('newkey')))
+        if (is_null($key = $this->getRequest()->getPost('key')))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
-                ->appendBody('expect param newkey');
-        if (is_null($oldkey = $this->getRequest()->getPost('oldkey')))
+                ->appendBody('expect param key');
+        if (empty($key))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
-                ->appendBody('expect param oldkey');
+                ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+                ->appendBody(Zend_Json::encode(
+                    $answer = array(
+                        'success'   => false,
+                        'key'       => 'Ключ документа не указан',
+                        'value'     => 'Вы должны выбрать документ который собираетесь изменить')
+                    ));
         if (is_null($value = $this->getRequest()->getPost('value')))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
                 ->appendBody('expect param value');
 
         try {
-            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
-            $mongoDB->update($newkey, $oldkey, $value);
+            $mongoDB = new Application_Model_Mongodb(
+                $this->_config->mongo->DBname, $this->_config->mongo->docs->collection,
+                'localhost', $this->_config->mongo->conn->user, $this->_config->mongo->conn->pass);
+            $mongoDB->update($key, $value);
          } catch (MongoDBException $ex) {
-             return $this->getResponse()
-                ->setHttpResponseCode(500)
-                ->setHeader('Content-Type', 'application/json; charset=UTF-8')
-                ->appendBody(Zend_Json::encode(
-                    $answer = array(
-                        'success'   => false,
-                        'key'       => $ex->getMessage(),
-                        'value'     => $ex->getTraceAsString())
-                    ));
-         }
-        $this->getResponse()
-            ->setHttpResponseCode(204);
-    }
-
-    /**
-     * Добавление документа в MongoDB
-     *
-     * @return void
-     */
-    public function dumpadddocumentAction()
-    {
-        if (! $this->getRequest()->isPost())
-            return $this->getResponse()->setHttpResponseCode(415);
-        if (is_null($key = $this->getRequest()->getPost('key')))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expect param key');
-        if (is_null($value = $this->getRequest()->getPost('value')))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expect param value');
-
-        try {
-            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
-            $mongoDB->replace($key, $value);
-         } catch (MongoDBInsertException $ex) {
-             return $this->getResponse()
-                ->setHttpResponseCode(500)
-                ->setHeader('Content-Type', 'application/json; charset=UTF-8')
-                ->appendBody(Zend_Json::encode(
-                    $answer = array(
-                        'success'   => false,
-                        'key'       => $ex->getMessage(),
-                        'value'     => $ex->getTraceAsString())
-                    ));
-         }
-        $this->getResponse()
-            ->setHttpResponseCode(204);
-    }
-
-    /**
-     * Удаление документа в MongoDB
-     *
-     * @return void
-     */
-    public function dumpdeldocumentAction()
-    {
-        if (! $this->getRequest()->isPost())
-            return $this->getResponse()->setHttpResponseCode(415);
-        if (is_null($key = $this->getRequest()->getPost('key')))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expect param key');
-
-        try {
-            $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
-            $mongoDB->remove($key);
-         } catch (MongoDBRemoveException $ex) {
              return $this->getResponse()
                 ->setHttpResponseCode(500)
                 ->setHeader('Content-Type', 'application/json; charset=UTF-8')

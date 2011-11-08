@@ -18,7 +18,7 @@ class Application_Model_Mongodb
         else $auth = '';
 
         try {
-            $this->_conn = new Mongo("mongodb://{$auth}{$host}");
+            $this->_conn = new Mongo("mongodb://{$auth}{$host}/$dbname");
         } catch (MongoConnectionException $ex) {
             #TODO: пишем в логи
             throw new MongoDBException('Ошибка соединения с сервером MongoDB', 0, $ex);
@@ -71,23 +71,24 @@ class Application_Model_Mongodb
     /**
      * Обновление документа
      *
-     * @param string $newkey
-     * @param string $oldkey
+     * @param string $key
      * @param string $value
      */
-    public function update($newkey, $oldkey, $value)
+    public function update($key, $value)
     {
-        $cursor = $this->findOne($oldkey);
+        $cursor = $this->findOne($key);
         if (is_null($cursor))
-            throw new MongoDBKeyNotFound('Не удалось найти документ ' . $oldkey);
+            throw new MongoDBKeyNotFound('Не удалось найти документ ' . $key);
         $cursor['value'] = self::removeWrongChars($value);
-        $cursor['key'] = $newkey;
+        $cursor['key'] = $key;
         $cursor['changeTime'] = date('Y-m-d H:i:s');
         $this->_coll->save($cursor);
     }
 
     /**
      * Создание/обновление нового документа
+     * 
+     * [НЕИСПОЛЬЗУЕТСЯ]
      *
      * @throws MongoDBInsertException
      * @param string $key
@@ -115,6 +116,8 @@ class Application_Model_Mongodb
 
     /**
      * Удаление документа
+     * 
+     * [НЕИСПОЛЬЗУЕТСЯ]
      *
      * @throws MongoDBRemoveException
      * @param string $key

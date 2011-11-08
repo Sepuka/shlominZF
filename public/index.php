@@ -24,9 +24,10 @@ require_once 'Zend/Application.php';
 require_once APPLICATION_PATH . '/models/MemcachedConfig.php';
 require_once 'Zend/Cache/Backend/Memcached.php';
 require_once 'Zend/Cache/Core.php';
+require_once 'Zend/Cache/Exception.php';
 require_once 'Zend/Cache.php';
 
-$config = new Application_Model_MemcachedConfig(CONFIG_FILE, APPLICATION_ENV);
+$config = Application_Model_MemcachedConfig::getInstance();
 // Create application, bootstrap, and run
 $application = new Zend_Application(
     APPLICATION_ENV,

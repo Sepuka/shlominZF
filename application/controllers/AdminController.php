@@ -33,7 +33,7 @@ class AdminController extends Zend_Controller_Action
     	$this->_articles = new Application_Model_Articles();
     	# Запускаем сессию для авторизации
     	$this->_session =  new Zend_Session_Namespace();
-    	$this->_config = new Application_Model_MemcachedConfig(CONFIG_FILE, APPLICATION_ENV);
+    	$this->_config = Application_Model_MemcachedConfig::getInstance();
     	$this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 

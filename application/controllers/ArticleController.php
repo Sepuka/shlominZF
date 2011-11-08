@@ -56,7 +56,7 @@ class ArticleController extends Zend_Controller_Action
         $layout->articleHeadline = $article->headline;
         $layout->articleContent = $article->content;
 
-        $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+        $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->docs->collection);
         $contacts = $mongoDB->findOne('contacts');
         if (! is_null($contacts))
             $layout->contacts = $contacts['value'];

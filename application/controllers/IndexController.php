@@ -22,7 +22,7 @@ class IndexController extends Zend_Controller_Action
 
     public function indexAction()
     {
-        $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->collection);
+        $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->docs->collection);
         $layout = Zend_Layout::getMvcInstance();
         $contacts = $mongoDB->findOne('contacts');
         if (! is_null($contacts))

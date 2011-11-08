@@ -1,14 +1,30 @@
 <?php
 require_once 'Zend/Config.php';
 
-class Application_Model_MemcachedConfig extends Zend_Config
+class Application_Model_MemcachedConfig
+{
+    protected static $_instance;
+
+    private function __construct() {}
+    private function __wakeup() {}
+    private function __clone() {}
+
+    public static function getInstance() {
+        if (is_null(self::$_instance))
+            self::$_instance = new Application_Model_MemcachedConfig_Singleton();
+        return self::$_instance;
+    }
+}
+
+class Application_Model_MemcachedConfig_Singleton extends Zend_Config
 {
     const MEMCACHED_HOST        = 'localhost';
     const MEMCACHED_PORT        = '11211';
     const LIFETIME              = 3600;
 
-    public function __construct($configFile, $section)
+    public function __construct()
     {
+        // если memcached выключен, мы об этом не можем узнать
         $backend = new Zend_Cache_Backend_Memcached(array(
             'servers'   => array(array(
                 'host'      => self::MEMCACHED_HOST,
@@ -24,14 +40,14 @@ class Application_Model_MemcachedConfig extends Zend_Config
             $cache = Zend_Cache::factory($frontend, $backend);
         } catch (Zend_Cache_Exception $ex) {
             # TODO: лог о том что кеширование не используется
-            $config = $this->_loadConfig($configFile, $section);
+            $config = $this->_loadConfig(CONFIG_FILE, APPLICATION_ENV);
             $config = self::convertConfig($config);
             return parent::__construct($config);
         }
         // Ключ доступа к данным в memcached меняется ежечасно
         $keyConfig = $frontend->getOption('cache_id_prefix') . 'config';
         if (($config = $cache->load($keyConfig)) === false) {
-            $config = $this->_loadConfig($configFile, $section);
+            $config = $this->_loadConfig(CONFIG_FILE, APPLICATION_ENV);
             $cache->save($config, $keyConfig, array(), self::LIFETIME);
         }
         // Полученный конфиг имеет вид ключ.ключ.ключ = значение
