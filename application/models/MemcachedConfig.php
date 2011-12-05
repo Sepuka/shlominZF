@@ -32,7 +32,6 @@ class Application_Model_MemcachedConfig_Singleton extends Zend_Config
             ))
         ));
         $frontend = new Zend_Cache_Core(array(
-            'cache_id_prefix'           => date('YmdH') . "_",
             'lifetime'                  => self::LIFETIME,
             'automatic_serialization'   => true
         ));
@@ -44,8 +43,7 @@ class Application_Model_MemcachedConfig_Singleton extends Zend_Config
             $config = self::convertConfig($config);
             return parent::__construct($config);
         }
-        // Ключ доступа к данным в memcached меняется ежечасно
-        $keyConfig = $frontend->getOption('cache_id_prefix') . 'config';
+        $keyConfig = (string)filemtime(CONFIG_FILE);
         if (($config = $cache->load($keyConfig)) === false) {
             $config = $this->_loadConfig(CONFIG_FILE, APPLICATION_ENV);
             $cache->save($config, $keyConfig, array(), self::LIFETIME);
