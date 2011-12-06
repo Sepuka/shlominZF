@@ -9,6 +9,11 @@ class Application_Model_MemcachedConfig
     private function __wakeup() {}
     private function __clone() {}
 
+    /**
+     * Получение экземпляра класса хранящего конфигурацию
+     *
+     * @return object
+     */
     public static function getInstance() {
         if (is_null(self::$_instance))
             self::$_instance = new Application_Model_MemcachedConfig_Singleton();
