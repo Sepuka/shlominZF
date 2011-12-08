@@ -214,7 +214,7 @@ class AjaxController extends Zend_Controller_Action
                 ->appendBody('expect param content');
 
     	try {
-    	   Application_Model_Articles::updateArticle($id, $categoryID, $headline, $content);
+    	   $articleID = Application_Model_Articles::updateArticle($id, $categoryID, $headline, $content);
     	} catch (ArticleException $ex) {
     	    return $this->getResponse()
                 ->setHttpResponseCode(400);
@@ -223,7 +223,8 @@ class AjaxController extends Zend_Controller_Action
                 ->setHttpResponseCode(500);
     	}
     	$this->getResponse()
-            ->setHttpResponseCode(204);
+            ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+            ->appendBody(Zend_Json::encode(array('articleID' => $articleID)));
     }
 
     /**
