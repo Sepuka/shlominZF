@@ -6,8 +6,13 @@
 class AjaxController extends Zend_Controller_Action
 {
     protected $_config  = null;
+    /**
+     *
+     * @var Zend_Acl
+     */
+    protected $_ACL     = null;
 
-	/**
+    /**
 	 * Обработка вызовов несуществующих действий
 	 *
 	 * @param string $method
@@ -24,11 +29,29 @@ class AjaxController extends Zend_Controller_Action
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout->disableLayout();
 
-        if (! $this->getRequest()->isXmlHttpRequest())
-            return $this->getResponse()->setHttpResponseCode(415);
+        $this->_ACL = new Application_Model_Acl();
+        # Запускаем сессию для авторизации
+    	$this->_session =  new Zend_Session_Namespace();
 
     	$this->_config = Application_Model_MemcachedConfig::getInstance();
     	$this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
+    }
+
+    public function preDispatch1()
+    {
+        if (! $this->getRequest()->isXmlHttpRequest()) {
+            $this->getRequest()->setDispatched(false);
+            // TODO сделать return
+            $this->getResponse()->setHttpResponseCode(415);
+            exit('expect AJAX');
+        }
+
+        $auth = Zend_Auth::getInstance();
+    	if (! $auth->hasIdentity()) {
+            $this->getRequest()->setDispatched(false);
+    		$this->getResponse()->setHttpResponseCode(403);
+            exit('not authority');
+        }
     }
 
     /**
@@ -252,5 +275,153 @@ class AjaxController extends Zend_Controller_Action
     	}
     	$this->getResponse()
             ->setHttpResponseCode(204);
+    }
+
+    /**
+     * Добавление категорий
+     *
+     * Принимает параметры parent и name и создает категорию name
+     * привязывая ее к parent, при этом если parent не существует
+     * так же создает и её
+     *
+     */
+    public function categoriesaddAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+	    $this->_helper->layout->disableLayout();
+
+        if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
+			return $this->getResponse()->setHttpResponseCode(403);
+    	if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+        if (is_null($parent = $this->getRequest()->getPost('parent')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param parent');
+        if (is_null($name = $this->getRequest()->getPost('name')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param name');
+
+        # Подключение модели для работы с категориями
+    	$categories = new Application_Model_Categories();
+    	try {
+    		$categories->addCategories($parent, $name);
+    	} catch (CategoriesException $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(500);
+    	}
+    	$this->getResponse()
+    		->setHttpResponseCode(204);
+    }
+
+    /**
+     * Удаление категории
+     *
+     */
+    public function categoriesdelAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+	    $this->_helper->layout->disableLayout();
+
+        if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
+			return $this->getResponse()->setHttpResponseCode(403);
+    	if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+        if (is_null($id = $this->getRequest()->getPost('id')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param id');
+
+        # Подключение модели для работы с категориями
+    	$categories = new Application_Model_Categories();
+    	try {
+    		$categories->delCategories($id);
+    	} catch (Categories_Exception $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(500);
+    	}
+    	$this->getResponse()
+    		->setHttpResponseCode(204);
+    }
+
+    /**
+     * Получение списка категорий для таблицы в формате JSON через AJAX
+     *
+     */
+    public function categoriesviewAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+	    $this->_helper->layout->disableLayout();
+
+    	if (! $this->getRequest()->isGet())
+    		return $this->getResponse()->setHttpResponseCode(415);
+        if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'view'))
+			return $this->getResponse()->setHttpResponseCode(403);
+
+    	$category = $this->getRequest()->getQuery('category');
+        # Подключение модели для работы с категориями
+    	$categories = new Application_Model_Categories();
+    	if (! empty($category))
+    		$categories = $categories->getCategoriesListSpecified($category);
+    	else
+    		$categories = $categories->getCategories();
+        $categories = $categories->fetchAll();
+        $data['total'] = count($categories);
+        $data['categories'] = $categories;
+    	$this->getResponse()
+			->setHeader('Content-Type', 'application/json; charset=UTF-8')
+			->appendBody(Zend_Json::encode($data));
+    }
+
+    /**
+     * Редактирование категорий
+     *
+     */
+    public function categorieseditAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+	    $this->_helper->layout->disableLayout();
+
+    	if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+        if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
+			return $this->getResponse()->setHttpResponseCode(403);
+		if (is_null($id = $this->getRequest()->getPost('id')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param id');
+		if (is_null($sequence = $this->getRequest()->getPost('sequence')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param sequence');
+		if (is_null($parent = $this->getRequest()->getPost('parent')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param parent');
+		if (is_null($name = $this->getRequest()->getPost('name')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expect param name');
+
+        # Подключение модели для работы с категориями
+    	$categories = new Application_Model_Categories();
+    	try {
+    		$categories->editCategories($id, $sequence, $parent, $name);
+    	} catch (Categories_Exception $ex) {
+    		return $this->getResponse()
+    			->setHttpResponseCode(400);
+    	} catch (Exception $ex) {
+    	    return $this->getResponse()
+    			->setHttpResponseCode(500);
+    	}
+    	$this->getResponse()
+    		->setHttpResponseCode(204);
     }
 }

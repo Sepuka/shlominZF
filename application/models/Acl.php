@@ -7,6 +7,8 @@ class Application_Model_Acl extends Zend_Acl
 {
 	/**
 	 * Конструктор
+     *
+     * Своего конструктора у класса Zend_Acl нет
 	 *
 	 */
 	public function __construct()
@@ -34,4 +36,3 @@ class Application_Model_Acl extends Zend_Acl
 		$this->allow('administrator', 'admin', 'edit');
 	}
 }
-?>
