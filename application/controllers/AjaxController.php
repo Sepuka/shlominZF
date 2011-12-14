@@ -257,7 +257,6 @@ class AjaxController extends Zend_Controller_Action
      */
     public function articlesremoveAction()
     {
-
         if (! $this->getRequest()->isPost())
     		return $this->getResponse()->setHttpResponseCode(415);
 
@@ -287,9 +286,6 @@ class AjaxController extends Zend_Controller_Action
      */
     public function categoriesaddAction()
     {
-        $this->_helper->viewRenderer->setNoRender();
-	    $this->_helper->layout->disableLayout();
-
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
 			return $this->getResponse()->setHttpResponseCode(403);
     	if (! $this->getRequest()->isPost())
@@ -324,9 +320,6 @@ class AjaxController extends Zend_Controller_Action
      */
     public function categoriesdelAction()
     {
-        $this->_helper->viewRenderer->setNoRender();
-	    $this->_helper->layout->disableLayout();
-
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
 			return $this->getResponse()->setHttpResponseCode(403);
     	if (! $this->getRequest()->isPost())
@@ -357,9 +350,6 @@ class AjaxController extends Zend_Controller_Action
      */
     public function categoriesviewAction()
     {
-        $this->_helper->viewRenderer->setNoRender();
-	    $this->_helper->layout->disableLayout();
-
     	if (! $this->getRequest()->isGet())
     		return $this->getResponse()->setHttpResponseCode(415);
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'view'))
@@ -386,9 +376,6 @@ class AjaxController extends Zend_Controller_Action
      */
     public function categorieseditAction()
     {
-        $this->_helper->viewRenderer->setNoRender();
-	    $this->_helper->layout->disableLayout();
-
     	if (! $this->getRequest()->isPost())
     		return $this->getResponse()->setHttpResponseCode(415);
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
@@ -423,5 +410,17 @@ class AjaxController extends Zend_Controller_Action
     	}
     	$this->getResponse()
     		->setHttpResponseCode(204);
+    }
+
+    public function usersviewAction()
+    {
+        if (! $this->getRequest()->isPost())
+    		return $this->getResponse()->setHttpResponseCode(415);
+        if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'view'))
+			return $this->getResponse()->setHttpResponseCode(403);
+        $inst = new Application_Model_Acldb();
+        $this->getResponse()
+            ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+            ->appendBody(Zend_Json::encode($inst->fetchAll()->toArray()));
     }
 }

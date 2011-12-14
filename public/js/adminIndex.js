@@ -6,7 +6,7 @@ Ext.onReady(function() {
 		closable: false,
 		resizable: false,
 		xtype: 'window',
-		firstShow: 1
+		firstShow: 1// Собственное свойство для работы события activate
 	};
 	var CategoriesIcon = new Ext.create('Ext.window.Window', AbstractIcon);
 	CategoriesIcon.setTitle('Разделы сайта');
@@ -44,6 +44,17 @@ Ext.onReady(function() {
 	var BackupIcon = new Ext.create('Ext.window.Window', AbstractIcon);
 	BackupIcon.setTitle('Настройка архивирования');
 	BackupIcon.update('Создание и редактирование правил для работы с бекапами');
+
+	var UserIcon = new Ext.create('Ext.window.Window', AbstractIcon);
+	UserIcon.setTitle('Управление пользователями');
+	UserIcon.update('Создание, удаление, редактирование пользователей сайта');
+	UserIcon.addListener('activate', function(self, opt) {
+		if (self.firstShow) {
+			self.firstShow--;
+		} else {
+			window.location = '/admin/users';
+		}
+	});
 
 	var viewport = new Ext.create('Ext.container.Viewport', {
 		layout: 'border',
@@ -86,4 +97,5 @@ Ext.onReady(function() {
 	ArticlesIcon.setPosition(getCoordinateX(), coordinateY, false);
 	DumpIcon.setPosition(getCoordinateX(), coordinateY, false);
 	BackupIcon.setPosition(getCoordinateX(), coordinateY, false);
+    UserIcon.setPosition(getCoordinateX(), coordinateY, false);
 });

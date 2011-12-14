@@ -204,4 +204,16 @@ class AdminController extends Zend_Controller_Action
     	$layout = Zend_Layout::getMvcInstance();
     	$layout->title = 'Редактирование служебной информации';
     }
+
+    /**
+     * Вызов страницы для работы с пользователями
+     *
+     * @link http://{HOST}/admin/users
+     */
+    public function usersAction()
+    {
+        $this->_helper->layout->setLayout('layout-admin-pages');
+    	$layout = Zend_Layout::getMvcInstance();
+    	$layout->title = 'Управление пользователями';
+    }
 }

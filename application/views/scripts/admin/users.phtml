@@ -1,0 +1,52 @@
+<script language="javascript" type="text/javascript">
+Ext.onReady(function() {
+    Ext.define('usersModel', {
+	   	extend: 'Ext.data.Model',
+	   	fields: [
+			{name: 'login', type: 'string'},
+            {name: 'role', type: 'string'}
+		]
+	});
+
+    var usersStore = Ext.create('Ext.data.Store', {
+        autoLoad: true,
+        model: 'usersModel',
+        proxy: {
+            type: 'ajax',
+            url: '/ajax/usersView',
+            actionMethods: 'POST',
+            reader: {
+                type: 'json'
+            }
+        }
+    });
+
+    var usersGrid = Ext.create('Ext.grid.Panel', {
+        title: 'Список всех пользователей зарегистрированных в системе',
+        store: usersStore,
+        forceFit: true,
+        autoScroll: true,
+        columns: [
+            {header: 'ЛОГИН', dataIndex: 'login'},
+            {header: 'РОЛЬ', dataIndex: 'role'}
+        ]
+    });
+
+    var viewport = Ext.create('Ext.container.Viewport', {
+        layout: 'border',
+        items: [
+        {
+            region: 'north',
+            items: linksBar
+        },{
+            region: 'west',
+            itemId: 'westMenuPanel',
+            width: 200,
+        },{
+            region: 'center',
+            itemId: 'centerMenuPanel',
+            items: usersGrid
+        }]
+	});
+});
+</script>
