@@ -69,14 +69,14 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
      * @param integer $categoryID
      * @param string $headline
      * @param string $content
-     * @return void
+     * @return integer
      */
     static public function updateArticle($id, $categoryID, $headline, $content)
     {
         $model = new Application_Model_Articles();
-	if (empty($id) && empty($categoryID))
+        if (empty($id) && empty($categoryID))
             throw new ArticleException('id and categoryID is empty!');
-	if (empty($headline))
+        if (empty($headline))
             throw new ArticleException('headline is empty!');
         // Удаление переносов строк
         $content = str_replace(array(chr(10), chr(13)), '', $content);
@@ -99,7 +99,9 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
                 'content' => $content
     		));
         }
-	$article->save();
+        $article->save();
+        // Возвращаем идентификатор статьи
+        return $article->id;
     }
 
     /**
