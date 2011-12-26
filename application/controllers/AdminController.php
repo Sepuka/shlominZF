@@ -44,13 +44,13 @@ class AdminController extends Zend_Controller_Action
      */
     public function preDispatch()
     {
-    	// Перенаправление на login для авторизации
-    	if ($this->getRequest()->getActionName() != 'login') {
-    		$auth = Zend_Auth::getInstance();
-    		if (! $auth->hasIdentity())
-    			return $this->getResponse()->setRedirect('/admin/login');
-    		if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'view'))
-				return $this->getResponse()->setRedirect('/admin/login');
+        // Перенаправление на login для авторизации
+        if ($this->getRequest()->getActionName() != 'login') {
+            $auth = Zend_Auth::getInstance();
+        if (! $auth->hasIdentity())
+            return $this->getResponse()->setRedirect('/admin/login');
+        if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'view'))
+            return $this->getResponse()->setRedirect('/admin/login');
     	}
     }
 
@@ -69,40 +69,42 @@ class AdminController extends Zend_Controller_Action
      */
     public function loginAction()
     {
-    	if ($this->getRequest()->isPost()) {
-    		Zend_Loader::loadClass('Zend_Auth_Adapter_DbTable');
-    		$authAdapter = new Zend_Auth_Adapter_DbTable();
-    		$authAdapter->setTableName('acl');
-    		$authAdapter->setIdentityColumn('login');
-    		$authAdapter->setCredentialColumn('hash');
-    		$authAdapter->setIdentity($this->getRequest()->getPost('login'));
-    		$authAdapter->setCredential(md5($this->getRequest()->getPost('password') . $this->_config->salt));
-    		$auth = Zend_Auth::getInstance();
-    		$authResult = $auth->authenticate($authAdapter);
+        // Если это POST-запрос, то логинимся, если нет, то показывает форму
+        if ($this->getRequest()->isPost()) {
+            Zend_Loader::loadClass('Zend_Auth_Adapter_DbTable');
+            $authAdapter = new Zend_Auth_Adapter_DbTable(null, 'acl', 'login', 'hash');
+            $authAdapter->setIdentity($this->getRequest()->getPost('login'));
+            $authAdapter->setCredential(md5($this->getRequest()->getPost('password') . $this->_config->salt));
+            $auth = Zend_Auth::getInstance();
+            $authResult = $auth->authenticate($authAdapter);
 
-    		if ($authResult->isValid()) {
-    			$user = Application_Model_Acldb::get($authResult->getIdentity());
-    			$this->_session->role = $user->role;
-    			if ($this->getRequest()->getPost('saveme'))
-    				Zend_Session::rememberMe();
-    			$this->getResponse()->setRedirect('/admin');
-    		} else {
-    			switch ($authResult->getCode()) {
-    				case Zend_Auth_Result::FAILURE_IDENTITY_NOT_FOUND:
-    					$this->view->wrongData = 'Пользователя с таким логином не существует';
-    				break;
+            if ($authResult->isValid()) {
+                $user = Application_Model_Acldb::get($authResult->getIdentity());
+                if ($user->enabled == 0) {
+                    $this->view->wrongData = 'Ваша учетная запись заблокирована администратором';
+                } else {
+                    $this->_session->role = $user->role;
+                    if ($this->getRequest()->getPost('saveme'))
+                        Zend_Session::rememberMe();
+                    $this->getResponse()->setRedirect('/admin');
+                }
+            } else {
+                switch ($authResult->getCode()) {
+                    case Zend_Auth_Result::FAILURE_IDENTITY_NOT_FOUND:
+                        $this->view->wrongData = 'Пользователя с таким логином не существует';
+                        break;
 
-    				case Zend_Auth_Result::FAILURE_CREDENTIAL_INVALID:
-    					$this->view->wrongData = 'Некорректно введены данные';
-    				break;
+                    case Zend_Auth_Result::FAILURE_CREDENTIAL_INVALID:
+                        $this->view->wrongData = 'Некорректно введены данные';
+                        break;
 
-					default:
-						$this->view->wrongData = 'Ошибка входа';
-    				break;
-    			}
-    		}
-    	}
-    	$this->_helper->layout->setLayout('layout-admin-login');
+                    default:
+                        $this->view->wrongData = 'Ошибка входа';
+                        break;
+                }
+            }
+        }
+        $this->_helper->layout->setLayout('layout-admin-login');
     }
 
     /**
