@@ -41,20 +41,20 @@ Ext.onReady(function() {
 		}
 	});
 
+    var UserIcon = new Ext.create('Ext.window.Window', AbstractIcon);
+    UserIcon.setTitle('Управление пользователями');
+    UserIcon.update('Создание, удаление, редактирование пользователей сайта');
+    UserIcon.addListener('activate', function(self, opt) {
+        if (self.firstShow) {
+            self.firstShow--;
+        } else {
+            window.location = '/admin/users';
+        }
+    });
+
 	var BackupIcon = new Ext.create('Ext.window.Window', AbstractIcon);
 	BackupIcon.setTitle('Настройка архивирования');
 	BackupIcon.update('Создание и редактирование правил для работы с бекапами');
-
-	var UserIcon = new Ext.create('Ext.window.Window', AbstractIcon);
-	UserIcon.setTitle('Управление пользователями');
-	UserIcon.update('Создание, удаление, редактирование пользователей сайта');
-	UserIcon.addListener('activate', function(self, opt) {
-		if (self.firstShow) {
-			self.firstShow--;
-		} else {
-			window.location = '/admin/users';
-		}
-	});
 
 	var viewport = new Ext.create('Ext.container.Viewport', {
 		layout: 'border',
@@ -92,10 +92,10 @@ Ext.onReady(function() {
 		}
 		return coordinateX;
 	};
-	// Установка координат для окон
-	CategoriesIcon.setPosition(getCoordinateX(), coordinateY, false);
-	ArticlesIcon.setPosition(getCoordinateX(), coordinateY, false);
-	DumpIcon.setPosition(getCoordinateX(), coordinateY, false);
-	BackupIcon.setPosition(getCoordinateX(), coordinateY, false);
-    UserIcon.setPosition(getCoordinateX(), coordinateY, false);
-});
+        // Установка координат для окон
+        CategoriesIcon.setPosition(getCoordinateX(), coordinateY, false);
+        ArticlesIcon.setPosition(getCoordinateX(), coordinateY, false);
+        DumpIcon.setPosition(getCoordinateX(), coordinateY, false);
+        BackupIcon.setPosition(getCoordinateX(), coordinateY, false);
+        UserIcon.setPosition(getCoordinateX(), coordinateY, false);
+    });
