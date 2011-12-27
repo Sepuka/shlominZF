@@ -1,12 +1,30 @@
 <script language="javascript" type="text/javascript">
 Ext.onReady(function() {
+    // Плохо что здесь значения меняются и приходится конвертировать обратно
+    function userStatus(status, record) {
+        var block = 'Блокирован';
+        var active = 'Активен';
+        if (status == 0) return block;
+        if (status == 1) return active;
+        if (status == block) return 0;
+        if (status == active) return 1;
+        return status;
+    };
+
+    var loadMaskGrid = new Ext.LoadMask(
+        Ext.getBody(),
+        {
+            msg: 'Пожалуйста, подождите. Идет обмен данными с сервером  ...'
+        });
+
     Ext.define('usersModel', {
-	   	extend: 'Ext.data.Model',
-	   	fields: [
-			{name: 'login', type: 'string'},
-            {name: 'role', type: 'string'}
-		]
-	});
+        extend: 'Ext.data.Model',
+        fields: [
+            {name: 'login', type: 'string'},
+            {name: 'role', type: 'string'},
+            {name: 'enabled', type: 'integer', convert: userStatus}
+        ]
+    });
 
     var usersStore = Ext.create('Ext.data.Store', {
         autoLoad: true,
@@ -18,6 +36,28 @@ Ext.onReady(function() {
             reader: {
                 type: 'json'
             }
+        },
+        listeners: {
+            'update': function(obj, record, operation, opt) {
+                loadMaskGrid.show();
+                Ext.Ajax.request({
+                    url: 'ajax/userEdit',
+                    method: 'POST',
+                    params: {
+                        login: record.data['login'],
+                        role: record.data['role'],
+                        enabled: userStatus(record.data['enabled'])
+                    },
+                    success: function(answer) {
+                    },
+                    failure: function() {
+                        Ext.Msg.alert("Ошибка", 'Не удалось обновить данные пользователя');
+                    },
+                    callback: function() {
+                        loadMaskGrid.hide();
+                    }
+                });
+            }
         }
     });
 
@@ -27,8 +67,22 @@ Ext.onReady(function() {
         forceFit: true,
         autoScroll: true,
         columns: [
-            {header: 'ЛОГИН', dataIndex: 'login'},
-            {header: 'РОЛЬ', dataIndex: 'role'}
+            {header: 'ЛОГИН', dataIndex: 'login', editor: 'textfield'},
+            {header: 'РОЛЬ', dataIndex: 'role', editor: 'textfield'},
+            {header: 'СТАТУС', dataIndex: 'enabled', editor: {
+                    typeAhead: true,
+                    xtype: 'combobox',
+                    store: [
+                        [0, 'Заблокировать пользователя'],
+                        [1, 'Активировать пользователя']
+                    ]
+            }}
+        ],
+        selType: 'cellmodel',
+        plugins: [
+            Ext.create('Ext.grid.plugin.CellEditing', {
+                clicksToEdit: 2
+            })
         ]
     });
 
