@@ -383,8 +383,8 @@ class AjaxController extends Zend_Controller_Action
     	if (! $this->getRequest()->isPost())
     		return $this->getResponse()->setHttpResponseCode(415);
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
-			return $this->getResponse()->setHttpResponseCode(403);
-		if (is_null($id = $this->getRequest()->getPost('id')))
+            return $this->getResponse()->setHttpResponseCode(403);
+        if (is_null($id = $this->getRequest()->getPost('id')))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
                 ->appendBody('expect param id');
@@ -431,5 +431,45 @@ class AjaxController extends Zend_Controller_Action
         $this->getResponse()
             ->setHeader('Content-Type', 'application/json; charset=UTF-8')
             ->appendBody(Zend_Json::encode($inst->fetchAll()->toArray()));
+    }
+
+    /**
+     * Редактирование списка пользователей
+     *
+     * @return void
+     */
+    public function userseditAction()
+    {
+        if (! $this->getRequest()->isPost())
+            return $this->getResponse()->setHttpResponseCode(415);
+        if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
+            return $this->getResponse()->setHttpResponseCode(403);
+
+        if (is_null($login = $this->getRequest()->getPost('login')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expected login param');
+        if (is_null($role = $this->getRequest()->getPost('role')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expected role param');
+        if (is_null($enabled = $this->getRequest()->getPost('enabled')))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expected enabled param');
+
+        $inst = new Application_Model_Acldb();
+        try {
+            $inst->editUser($login, $role, $enabled);
+        } catch (Acldb_Exception $ex) {
+            return $this->getResponse()
+                ->setHttpResponseCode(400);
+        } catch (Exception $ex) {
+            return $this->getResponse()
+                ->setHttpResponseCode(500);
+        }
+
+    	$this->getResponse()
+    		->setHttpResponseCode(204);
     }
 }

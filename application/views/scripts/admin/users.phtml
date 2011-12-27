@@ -41,7 +41,7 @@ Ext.onReady(function() {
             'update': function(obj, record, operation, opt) {
                 loadMaskGrid.show();
                 Ext.Ajax.request({
-                    url: 'ajax/userEdit',
+                    url: '/ajax/usersEdit',
                     method: 'POST',
                     params: {
                         login: record.data['login'],
@@ -67,7 +67,7 @@ Ext.onReady(function() {
         forceFit: true,
         autoScroll: true,
         columns: [
-            {header: 'ЛОГИН', dataIndex: 'login', editor: 'textfield'},
+            {header: 'ЛОГИН', dataIndex: 'login'},
             {header: 'РОЛЬ', dataIndex: 'role', editor: 'textfield'},
             {header: 'СТАТУС', dataIndex: 'enabled', editor: {
                     typeAhead: true,
