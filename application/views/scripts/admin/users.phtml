@@ -22,7 +22,9 @@ Ext.onReady(function() {
         fields: [
             {name: 'login', type: 'string'},
             {name: 'role', type: 'string'},
-            {name: 'enabled', type: 'integer', convert: userStatus}
+            {name: 'enabled', type: 'integer', convert: userStatus},
+            {name: 'create'},
+            {name: 'change'}
         ]
     });
 
@@ -68,7 +70,15 @@ Ext.onReady(function() {
         autoScroll: true,
         columns: [
             {header: 'ЛОГИН', dataIndex: 'login'},
-            {header: 'РОЛЬ', dataIndex: 'role', editor: 'textfield'},
+            {header: 'РОЛЬ', dataIndex: 'role', editor: {
+                    typeAhead: true,
+                    xtype: 'combobox',
+                    store: [
+                        ['guest', 'Гость'],
+                        ['staff', 'Персонал'],
+                        ['administrator', 'Администратор']
+                    ]
+            }},
             {header: 'СТАТУС', dataIndex: 'enabled', editor: {
                     typeAhead: true,
                     xtype: 'combobox',
@@ -76,7 +86,9 @@ Ext.onReady(function() {
                         [0, 'Заблокировать пользователя'],
                         [1, 'Активировать пользователя']
                     ]
-            }}
+            }},
+            {header: 'СОЗДАН', dataIndex: 'create'},
+            {header: 'ИЗМЕНЕН', dataIndex: 'change'}
         ],
         selType: 'cellmodel',
         plugins: [
@@ -96,6 +108,7 @@ Ext.onReady(function() {
             region: 'west',
             itemId: 'westMenuPanel',
             width: 200,
+            html: 'Общее количество пользователей зарегистрированных на сайте: <?=$this->cntAll;?>. из них администраторов: <?=$this->cntAdministrator;?>, персонала <?=$this->cntStaff;?> и гостей <?=$this->cntGuest;?>. Активированных учетных записей: <?=$this->cntEnabled;?>, заблокированных: <?=$this->cntDisabled;?>'
         },{
             region: 'center',
             itemId: 'centerMenuPanel',

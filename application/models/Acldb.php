@@ -42,6 +42,31 @@ class Application_Model_Acldb extends Zend_Db_Table_Abstract
             throw new Acldb_Exception('user ' . $login . ' not found');
         $user->role = $role;
         $user->enabled = $enabled;
+        $user->change = date('Y-m-d H:i:s');
         $user->save();
+    }
+
+    /**
+     * Получение общих данных о пользователях
+     *
+     * @return array
+     */
+    static public function metaData()
+    {
+        $inst = new Application_Model_Acldb();
+        $cntAll = $inst->select()->from('acl', array('cnt' => new Zend_db_Expr('COUNT(*)')))->query()->fetch();
+        $cntAdministrator = $inst->fetchAll('`role`="administrator"')->count();
+        $cntStaff = $inst->fetchAll('`role`="staff"')->count();
+        $cntGuest = $inst->fetchAll('`role`="guest"')->count();
+        $cntEnabled = $inst->fetchAll('`enabled`=1')->count();
+        $cntDisabled = $inst->fetchAll('`enabled`=0')->count();
+        return array(
+            'cntAll' => $cntAll['cnt'],
+            'cntAdministrator' => $cntAdministrator,
+            'cntStaff' => $cntStaff,
+            'cntGuest' => $cntGuest,
+            'cntEnabled' => $cntEnabled,
+            'cntDisabled' => $cntDisabled
+        );
     }
 }

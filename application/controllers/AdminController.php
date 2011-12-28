@@ -215,7 +215,14 @@ class AdminController extends Zend_Controller_Action
     public function usersAction()
     {
         $this->_helper->layout->setLayout('layout-admin-pages');
-    	$layout = Zend_Layout::getMvcInstance();
-    	$layout->title = 'Управление пользователями';
+        $layout = Zend_Layout::getMvcInstance();
+        $layout->title = 'Управление пользователями';
+        $metaData = Application_Model_Acldb::metaData();
+        $this->view->cntAll = $metaData['cntAll'];
+        $this->view->cntAdministrator = $metaData['cntAdministrator'];
+        $this->view->cntStaff = $metaData['cntStaff'];
+        $this->view->cntGuest = $metaData['cntGuest'];
+        $this->view->cntEnabled = $metaData['cntEnabled'];
+        $this->view->cntDisabled = $metaData['cntDisabled'];
     }
 }
