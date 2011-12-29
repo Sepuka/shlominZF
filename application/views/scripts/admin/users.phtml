@@ -98,17 +98,86 @@ Ext.onReady(function() {
         ]
     });
 
+    var statistics = Ext.create('Ext.container.Container', {
+        layout: {
+            type: 'table',
+            columns: 2
+        },
+        items: [
+            {
+                html: 'ПОЛЬЗОВАТЕЛИ',
+                colspan: 2,
+                style: {
+                    textAlign: 'center',
+                    fontWeight: 'bold'
+                }
+            },{
+                html: 'Всего',
+                width: 150
+            },{
+                html: '<?=$this->cntAll;?>',
+                width: 50,
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'Администраторов'
+            },{
+                html: '<?=$this->cntAdministrator;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'Персонала'
+            },{
+                html: '<?=$this->cntStaff;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'Гостей'
+            },{
+                html: '<?=$this->cntGuest;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'СОСТОЯНИЕ',
+                colspan: 2,
+                style: {
+                    textAlign: 'center',
+                    fontWeight: 'bold'
+                }
+            },{
+                html: 'Активных'
+            },{
+                html: '<?=$this->cntEnabled;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'Блокированных'
+            },{
+                html: '<?=$this->cntDisabled;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            }
+        ]
+    });
+
     var viewport = Ext.create('Ext.container.Viewport', {
         layout: 'border',
         items: [
         {
             region: 'north',
-            items: linksBar
+            items: linksBar // Переменная определена в шаблоне layout-admin-pages.phtml
         },{
             region: 'west',
             itemId: 'westMenuPanel',
             width: 200,
-            html: 'Общее количество пользователей зарегистрированных на сайте: <?=$this->cntAll;?>. из них администраторов: <?=$this->cntAdministrator;?>, персонала <?=$this->cntStaff;?> и гостей <?=$this->cntGuest;?>. Активированных учетных записей: <?=$this->cntEnabled;?>, заблокированных: <?=$this->cntDisabled;?>'
+            items: statistics
+            //html: 'Общее количество пользователей зарегистрированных на сайте: <?=$this->cntAll;?>. из них администраторов: <?=$this->cntAdministrator;?>, персонала <?=$this->cntStaff;?> и гостей <?=$this->cntGuest;?>. Активированных учетных записей: <?=$this->cntEnabled;?>, заблокированных: <?=$this->cntDisabled;?>'
         },{
             region: 'center',
             itemId: 'centerMenuPanel',
