@@ -20,6 +20,7 @@ Ext.onReady(function() {
     Ext.define('usersModel', {
         extend: 'Ext.data.Model',
         fields: [
+            {name: 'id', type: 'integer'},
             {name: 'login', type: 'string'},
             {name: 'role', type: 'string'},
             {name: 'enabled', type: 'integer', convert: userStatus},
@@ -30,46 +31,36 @@ Ext.onReady(function() {
 
     var usersStore = Ext.create('Ext.data.Store', {
         autoLoad: true,
+        autoSync: false,
         model: 'usersModel',
         proxy: {
             type: 'ajax',
-            url: '/ajax/usersView',
+            api: {
+                read: '/ajax/usersView',
+                create: '/ajax/usersCreate',
+                update: '/ajax/usersEdit',
+                destroy: '/ajax/usersDestroy'
+            },
             actionMethods: 'POST',
             reader: {
-                type: 'json'
-            }
-        },
-        listeners: {
-            'update': function(obj, record, operation, opt) {
-                loadMaskGrid.show();
-                Ext.Ajax.request({
-                    url: '/ajax/usersEdit',
-                    method: 'POST',
-                    params: {
-                        login: record.data['login'],
-                        role: record.data['role'],
-                        enabled: userStatus(record.data['enabled'])
-                    },
-                    success: function(answer) {
-                    },
-                    failure: function() {
-                        Ext.Msg.alert("Ошибка", 'Не удалось обновить данные пользователя');
-                    },
-                    callback: function() {
-                        loadMaskGrid.hide();
-                    }
-                });
+                type: 'json',
+                idProperty: 'id'
             }
         }
     });
 
+    var editing = Ext.create('Ext.grid.plugin.CellEditing', {
+        clicksToEdit: 2
+    });
+
     var usersGrid = Ext.create('Ext.grid.Panel', {
         title: 'Список всех пользователей зарегистрированных в системе',
+        iconCls: 'icon-grid',
         store: usersStore,
         forceFit: true,
         autoScroll: true,
         columns: [
-            {header: 'ЛОГИН', dataIndex: 'login'},
+            {header: 'ЛОГИН', dataIndex: 'login', editor: 'textfield'},
             {header: 'РОЛЬ', dataIndex: 'role', editor: {
                     typeAhead: true,
                     xtype: 'combobox',
@@ -90,12 +81,41 @@ Ext.onReady(function() {
             {header: 'СОЗДАН', dataIndex: 'create'},
             {header: 'ИЗМЕНЕН', dataIndex: 'change'}
         ],
-        selType: 'cellmodel',
-        plugins: [
-            Ext.create('Ext.grid.plugin.CellEditing', {
-                clicksToEdit: 2
-            })
-        ]
+        plugins: editing,
+        tbar: [{
+            iconCls: 'icon-add',
+            text: 'Добавить',
+            handler: function() {
+                var rec =  new usersModel({
+                    login: 'newUser',
+                    role: 'guest',
+                    enabled: 0
+                }), edit = editing;
+
+                edit.cancelEdit();
+                usersStore.insert(0, rec);
+                edit.startEditByPosition({
+                    row: 0,
+                    column: 0
+                });
+            }
+        },{
+            iconCls: 'icon-delete',
+            text: 'Удалить',
+            handler: function() {
+                var selection = usersGrid.getView().getSelectionModel().getSelection()[0];
+                if (selection) {
+                    usersGrid.store.remove(selection);
+                }
+            }
+        },{
+            iconCls: 'icon-save',
+            text: 'Синхронизировать',
+            handler: function() {
+                usersStore.sync();
+                usersStore.load();
+            }
+        }]
     });
 
     var statistics = Ext.create('Ext.container.Container', {

@@ -10,7 +10,7 @@ class Application_Model_Acldb extends Zend_Db_Table_Abstract
     // Таблица базы данных
     protected $_name = 'acl';
     // Первичный ключ
-    protected $_primary = 'login';
+    protected $_primary = 'id';
     // Разрешенные роли пользователей
     protected $_roles = array('guest', 'staff', 'administrator');
 
@@ -29,21 +29,56 @@ class Application_Model_Acldb extends Zend_Db_Table_Abstract
     /**
      * Редактирование пользователя
      *
+     * @param integer $id
      * @param string $login
      * @param string $role
      * @param integer $enabled
      */
-    public function editUser($login, $role, $enabled)
+    public function editUser($id, $login, $role, $enabled)
     {
         if (! in_array($role, $this->_roles))
             throw new Acldb_Exception('unknow role ' . $role);
-        $user = $this->find($login)->current();
+        $user = $this->find($id)->current();
         if ($user === null)
-            throw new Acldb_Exception('user ' . $login . ' not found');
+            throw new Acldb_Exception('user ' . $id . ' not found');
+        $user->login = $login;
         $user->role = $role;
         $user->enabled = $enabled;
         $user->change = date('Y-m-d H:i:s');
         $user->save();
+    }
+
+    /**
+     * Добавление пользователя
+     *
+     * @param string $login
+     * @param string $role
+     * @param integer $enabled
+     */
+    public function createUser($login, $role, $enabled)
+    {
+        if (! in_array($role, $this->_roles))
+            throw new Acldb_Exception('unknow role ' . $role);
+        $user = $this->createRow(array(
+            'login' => $login,
+            'role' => $role,
+            'enabled' => $enabled,
+            'create' => date('Y-m-d H:i:s')
+        ));
+        $user->save();
+    }
+
+    /**
+     * Удаление пользователя
+     *
+     * @param string $id
+     */
+    public function destroyUser($id)
+    {
+        $user = $this->find($id)->current();
+        if ($user === null)
+            throw new Acldb_Exception('user ' . $id . ' not found');
+        $user->delete();
     }
 
     /**
