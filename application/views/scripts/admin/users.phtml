@@ -1,34 +1,188 @@
 <script language="javascript" type="text/javascript">
 Ext.onReady(function() {
+    // Плохо что здесь значения меняются и приходится конвертировать обратно
+    function userStatus(status, record) {
+        var block = 'Блокирован';
+        var active = 'Активен';
+        if (status == 0) return block;
+        if (status == 1) return active;
+        if (status == block) return 0;
+        if (status == active) return 1;
+        return status;
+    };
+
+    var loadMaskGrid = new Ext.LoadMask(
+        Ext.getBody(),
+        {
+            msg: 'Пожалуйста, подождите. Идет обмен данными с сервером  ...'
+        });
+
     Ext.define('usersModel', {
-	   	extend: 'Ext.data.Model',
-	   	fields: [
-			{name: 'login', type: 'string'},
-            {name: 'role', type: 'string'}
-		]
-	});
+        extend: 'Ext.data.Model',
+        fields: [
+            {name: 'id', type: 'integer'},
+            {name: 'login', type: 'string'},
+            {name: 'role', type: 'string'},
+            {name: 'enabled', type: 'integer', convert: userStatus},
+            {name: 'create'},
+            {name: 'change'}
+        ]
+    });
 
     var usersStore = Ext.create('Ext.data.Store', {
         autoLoad: true,
+        autoSync: false,
         model: 'usersModel',
         proxy: {
             type: 'ajax',
-            url: '/ajax/usersView',
+            api: {
+                read: '/ajax/usersView',
+                create: '/ajax/usersCreate',
+                update: '/ajax/usersEdit',
+                destroy: '/ajax/usersDestroy'
+            },
             actionMethods: 'POST',
             reader: {
-                type: 'json'
+                type: 'json',
+                idProperty: 'id'
             }
         }
     });
 
+    var editing = Ext.create('Ext.grid.plugin.CellEditing', {
+        clicksToEdit: 2
+    });
+
     var usersGrid = Ext.create('Ext.grid.Panel', {
         title: 'Список всех пользователей зарегистрированных в системе',
+        iconCls: 'icon-grid',
         store: usersStore,
         forceFit: true,
         autoScroll: true,
         columns: [
-            {header: 'ЛОГИН', dataIndex: 'login'},
-            {header: 'РОЛЬ', dataIndex: 'role'}
+            {header: 'ЛОГИН', dataIndex: 'login', editor: 'textfield'},
+            {header: 'РОЛЬ', dataIndex: 'role', editor: {
+                    typeAhead: true,
+                    xtype: 'combobox',
+                    store: [
+                        ['guest', 'Гость'],
+                        ['staff', 'Персонал'],
+                        ['administrator', 'Администратор']
+                    ]
+            }},
+            {header: 'СТАТУС', dataIndex: 'enabled', editor: {
+                    typeAhead: true,
+                    xtype: 'combobox',
+                    store: [
+                        [0, 'Заблокировать пользователя'],
+                        [1, 'Активировать пользователя']
+                    ]
+            }},
+            {header: 'СОЗДАН', dataIndex: 'create'},
+            {header: 'ИЗМЕНЕН', dataIndex: 'change'}
+        ],
+        plugins: editing,
+        tbar: [{
+            iconCls: 'icon-add',
+            text: 'Добавить',
+            handler: function() {
+                var rec =  new usersModel({
+                    login: 'newUser',
+                    role: 'guest',
+                    enabled: 0
+                }), edit = editing;
+
+                edit.cancelEdit();
+                usersStore.insert(0, rec);
+                edit.startEditByPosition({
+                    row: 0,
+                    column: 0
+                });
+            }
+        },{
+            iconCls: 'icon-delete',
+            text: 'Удалить',
+            handler: function() {
+                var selection = usersGrid.getView().getSelectionModel().getSelection()[0];
+                if (selection) {
+                    usersGrid.store.remove(selection);
+                }
+            }
+        },{
+            iconCls: 'icon-save',
+            text: 'Синхронизировать',
+            handler: function() {
+                usersStore.sync();
+                usersStore.load();
+            }
+        }]
+    });
+
+    var statistics = Ext.create('Ext.container.Container', {
+        layout: {
+            type: 'table',
+            columns: 2
+        },
+        items: [
+            {
+                html: 'ПОЛЬЗОВАТЕЛИ',
+                colspan: 2,
+                style: {
+                    textAlign: 'center',
+                    fontWeight: 'bold'
+                }
+            },{
+                html: 'Всего',
+                width: 150
+            },{
+                html: '<?=$this->cntAll;?>',
+                width: 50,
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'Администраторов'
+            },{
+                html: '<?=$this->cntAdministrator;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'Персонала'
+            },{
+                html: '<?=$this->cntStaff;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'Гостей'
+            },{
+                html: '<?=$this->cntGuest;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'СОСТОЯНИЕ',
+                colspan: 2,
+                style: {
+                    textAlign: 'center',
+                    fontWeight: 'bold'
+                }
+            },{
+                html: 'Активных'
+            },{
+                html: '<?=$this->cntEnabled;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            },{
+                html: 'Блокированных'
+            },{
+                html: '<?=$this->cntDisabled;?>',
+                style: {
+                    textAlign: 'right',
+                }
+            }
         ]
     });
 
@@ -37,11 +191,13 @@ Ext.onReady(function() {
         items: [
         {
             region: 'north',
-            items: linksBar
+            items: linksBar // Переменная определена в шаблоне layout-admin-pages.phtml
         },{
             region: 'west',
             itemId: 'westMenuPanel',
             width: 200,
+            items: statistics
+            //html: 'Общее количество пользователей зарегистрированных на сайте: <?=$this->cntAll;?>. из них администраторов: <?=$this->cntAdministrator;?>, персонала <?=$this->cntStaff;?> и гостей <?=$this->cntGuest;?>. Активированных учетных записей: <?=$this->cntEnabled;?>, заблокированных: <?=$this->cntDisabled;?>'
         },{
             region: 'center',
             itemId: 'centerMenuPanel',
