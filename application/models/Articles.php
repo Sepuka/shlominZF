@@ -34,15 +34,15 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
             $categoryID = $article['category'];
             unset($article);
         } else $categoryID = null;
-	$categories_model = new Application_Model_Categories();
-	// Определившись с текущей категорией статьи (если произошел запрос конкретной статьи)
-	// вытащим всю родословную категории в виде массива
-	$branchCategories = $categories_model->getBranchCategory($categoryID);
-	$tree = $categories_model->getCategoriesTree('', 0, $branchCategories);
-	$data['total'] = count($tree);
-	$data['success'] = true;
-	$data['children'] = $tree;
-	return $data;
+        $categories_model = new Application_Model_Categories();
+        // Определившись с текущей категорией статьи (если произошел запрос конкретной статьи)
+        // вытащим всю родословную категории в виде массива
+        $branchCategories = $categories_model->getBranchCategory($categoryID);
+        $tree = $categories_model->getCategoriesTree('', 0, $branchCategories);
+        $data['total'] = count($tree);
+        $data['success'] = true;
+        $data['children'] = $tree;
+        return $data;
     }
 
     /**

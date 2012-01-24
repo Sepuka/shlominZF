@@ -41,21 +41,24 @@ class AjaxController extends Zend_Controller_Action
         $this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 
+    // Преддиспетчер
     public function preDispatch()
     {
         if (! $this->getRequest()->isXmlHttpRequest()) {
             $this->getRequest()->setDispatched(false);
             // TODO сделать return
-            $this->getResponse()->setHttpResponseCode(415);
+            $this->getResponse()->setHttpResponseCode(405);
             exit('expect AJAX');
         }
 
+        /**
         $auth = Zend_Auth::getInstance();
     	if (! $auth->hasIdentity()) {
             $this->getRequest()->setDispatched(false);
     		$this->getResponse()->setHttpResponseCode(403);
             exit('not authority');
         }
+         */
     }
 
     /**
@@ -70,7 +73,7 @@ class AjaxController extends Zend_Controller_Action
     public function treearticlesAction()
     {
         if (! $this->getRequest()->isGet())
-            return $this->getResponse()->setHttpResponseCode(415);
+            return $this->getResponse()->setHttpResponseCode(405);
         if ($articleID = $this->getRequest()->getParam('articleID'))
             $articleID = array_pop(explode('/', $articleID));
         else
@@ -93,7 +96,7 @@ class AjaxController extends Zend_Controller_Action
     public function dumpkeyslistAction()
     {
         if (! $this->getRequest()->isGet())
-            return $this->getResponse()->setHttpResponseCode(415);
+            return $this->getResponse()->setHttpResponseCode(405);
 
         try {
             $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->docs->collection,
@@ -128,7 +131,7 @@ class AjaxController extends Zend_Controller_Action
     public function dumpgetdocumentAction()
     {
         if (! $this->getRequest()->isGet())
-            return $this->getResponse()->setHttpResponseCode(415);
+            return $this->getResponse()->setHttpResponseCode(405);
 
         if (is_null($key = $this->getRequest()->getParam('key')))
             return $this->getResponse()
@@ -169,7 +172,7 @@ class AjaxController extends Zend_Controller_Action
     public function dumpupdatedocumentAction()
     {
         if (! $this->getRequest()->isPost())
-            return $this->getResponse()->setHttpResponseCode(415);
+            return $this->getResponse()->setHttpResponseCode(405);
         if (is_null($key = $this->getRequest()->getPost('key')))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
@@ -221,7 +224,7 @@ class AjaxController extends Zend_Controller_Action
     public function articlessaveAction()
     {
         if (! $this->getRequest()->isPost())
-    		return $this->getResponse()->setHttpResponseCode(415);
+    		return $this->getResponse()->setHttpResponseCode(405);
 
         if (is_null($id = $this->getRequest()->getPost('id')))
             return $this->getResponse()
@@ -262,7 +265,7 @@ class AjaxController extends Zend_Controller_Action
     public function articlesremoveAction()
     {
         if (! $this->getRequest()->isPost())
-    		return $this->getResponse()->setHttpResponseCode(415);
+    		return $this->getResponse()->setHttpResponseCode(405);
 
         if (is_null($id = $this->getRequest()->getPost('id')))
             return $this->getResponse()
@@ -293,7 +296,7 @@ class AjaxController extends Zend_Controller_Action
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
 			return $this->getResponse()->setHttpResponseCode(403);
     	if (! $this->getRequest()->isPost())
-    		return $this->getResponse()->setHttpResponseCode(415);
+    		return $this->getResponse()->setHttpResponseCode(405);
         if (is_null($parent = $this->getRequest()->getPost('parent')))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
@@ -327,7 +330,7 @@ class AjaxController extends Zend_Controller_Action
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
 			return $this->getResponse()->setHttpResponseCode(403);
     	if (! $this->getRequest()->isPost())
-    		return $this->getResponse()->setHttpResponseCode(415);
+    		return $this->getResponse()->setHttpResponseCode(405);
         if (is_null($id = $this->getRequest()->getPost('id')))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
@@ -355,7 +358,7 @@ class AjaxController extends Zend_Controller_Action
     public function categoriesviewAction()
     {
     	if (! $this->getRequest()->isGet())
-    		return $this->getResponse()->setHttpResponseCode(415);
+    		return $this->getResponse()->setHttpResponseCode(405);
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'view'))
 			return $this->getResponse()->setHttpResponseCode(403);
 
@@ -381,7 +384,7 @@ class AjaxController extends Zend_Controller_Action
     public function categorieseditAction()
     {
     	if (! $this->getRequest()->isPost())
-    		return $this->getResponse()->setHttpResponseCode(415);
+    		return $this->getResponse()->setHttpResponseCode(405);
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
             return $this->getResponse()->setHttpResponseCode(403);
         if (is_null($id = $this->getRequest()->getPost('id')))
@@ -424,7 +427,7 @@ class AjaxController extends Zend_Controller_Action
     public function usersviewAction()
     {
         if (! $this->getRequest()->isPost())
-            return $this->getResponse()->setHttpResponseCode(415);
+            return $this->getResponse()->setHttpResponseCode(405);
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'view'))
             return $this->getResponse()->setHttpResponseCode(403);
         $inst = new Application_Model_Acldb();
@@ -441,7 +444,7 @@ class AjaxController extends Zend_Controller_Action
     public function userseditAction()
     {
         if (! $this->getRequest()->isPost())
-            return $this->getResponse()->setHttpResponseCode(415);
+            return $this->getResponse()->setHttpResponseCode(405);
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
             return $this->getResponse()->setHttpResponseCode(403);
 
@@ -496,7 +499,7 @@ class AjaxController extends Zend_Controller_Action
     public function userscreateAction()
     {
         if (! $this->getRequest()->isPost())
-            return $this->getResponse()->setHttpResponseCode(415);
+            return $this->getResponse()->setHttpResponseCode(405);
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
             return $this->getResponse()->setHttpResponseCode(403);
 
@@ -545,7 +548,7 @@ class AjaxController extends Zend_Controller_Action
     public function usersdestroyAction()
     {
         if (! $this->getRequest()->isPost())
-            return $this->getResponse()->setHttpResponseCode(415);
+            return $this->getResponse()->setHttpResponseCode(405);
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
             return $this->getResponse()->setHttpResponseCode(403);
 
