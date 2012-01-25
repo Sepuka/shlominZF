@@ -8,22 +8,33 @@ class Acldb_Exception extends Exception {};
 class Application_Model_Acldb extends Zend_Db_Table_Abstract
 {
     // Таблица базы данных
-    protected $_name = 'acl';
+    protected $_name    = 'acl';
     // Первичный ключ
     protected $_primary = 'id';
     // Разрешенные роли пользователей
-    protected $_roles = array('guest', 'staff', 'administrator');
+    protected $_roles   = array('guest', 'staff', 'administrator');
 
     /**
-     * Получение сущности клиента по первичному ключу
+     *
+     * @var Zend_Config
+     */
+    protected $_config  = null;
+
+    public function init()
+    {
+        $this->_config = Application_Model_MemcachedConfig::getInstance();
+    }
+
+    /**
+     * Получение сущности клиента по логину
      *
      * @param string $login
      * @return Zend_Db_Table_Row
      */
-    public static function get($login)
+    public static function getByLogin($login)
     {
         $model = new Application_Model_Acldb();
-        return $model->find($login)->current();
+        return $model->fetchRow($model->select()->where('login=?', $login));
     }
 
     /**
@@ -34,7 +45,7 @@ class Application_Model_Acldb extends Zend_Db_Table_Abstract
      * @param string $role
      * @param integer $enabled
      */
-    public function editUser($id, $login, $role, $enabled)
+    public function editUser($id, $login, $password, $role, $enabled)
     {
         if (! in_array($role, $this->_roles))
             throw new Acldb_Exception('unknow role ' . $role);
@@ -42,6 +53,7 @@ class Application_Model_Acldb extends Zend_Db_Table_Abstract
         if ($user === null)
             throw new Acldb_Exception('user ' . $id . ' not found');
         $user->login = $login;
+        $user->hash = md5($password . $this->_config->salt);
         $user->role = $role;
         $user->enabled = $enabled;
         $user->change = date('Y-m-d H:i:s');
@@ -52,15 +64,17 @@ class Application_Model_Acldb extends Zend_Db_Table_Abstract
      * Добавление пользователя
      *
      * @param string $login
+     * @param string $password
      * @param string $role
      * @param integer $enabled
      */
-    public function createUser($login, $role, $enabled)
+    public function createUser($login, $password, $role, $enabled)
     {
         if (! in_array($role, $this->_roles))
             throw new Acldb_Exception('unknow role ' . $role);
         $user = $this->createRow(array(
             'login' => $login,
+            'hash' => md5($password . $this->_config->salt),
             'role' => $role,
             'enabled' => $enabled,
             'create' => date('Y-m-d H:i:s')

@@ -79,7 +79,7 @@ class AdminController extends Zend_Controller_Action
             $authResult = $auth->authenticate($authAdapter);
 
             if ($authResult->isValid()) {
-                $user = Application_Model_Acldb::get($authResult->getIdentity());
+                $user = Application_Model_Acldb::getByLogin($authResult->getIdentity());
                 if ($user->enabled == 0) {
                     $this->view->wrongData = 'Ваша учетная запись заблокирована администратором';
                 } else {

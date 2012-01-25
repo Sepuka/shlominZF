@@ -461,6 +461,12 @@ class AjaxController extends Zend_Controller_Action
                 ->appendBody('expected login param');
         else
             $login = $row['login'];
+        if (! array_key_exists('password', $row) || empty($row['password']))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expected password param');
+        else
+            $password = $row['password'];
         if (! array_key_exists('role', $row) || empty($row['role']))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
@@ -478,7 +484,7 @@ class AjaxController extends Zend_Controller_Action
 
         $inst = new Application_Model_Acldb();
         try {
-            $inst->editUser($id, $login, $role, $enabled);
+            $inst->editUser($id, $login, $password, $role, $enabled);
         } catch (Acldb_Exception $ex) {
             return $this->getResponse()
                 ->setHttpResponseCode(400);
@@ -510,6 +516,12 @@ class AjaxController extends Zend_Controller_Action
                 ->appendBody('expected login param');
         else
             $login = $row['login'];
+        if (! array_key_exists('password', $row) || empty($row['password']))
+            return $this->getResponse()
+                ->setHttpResponseCode(400)
+                ->appendBody('expected password param');
+        else
+            $password = $row['password'];
         if (! array_key_exists('role', $row) || empty($row['role']))
             return $this->getResponse()
                 ->setHttpResponseCode(400)
@@ -527,7 +539,7 @@ class AjaxController extends Zend_Controller_Action
 
         $inst = new Application_Model_Acldb();
         try {
-            $inst->createUser($login, $role, $enabled);
+            $inst->createUser($login, $password, $role, $enabled);
         } catch (Acldb_Exception $ex) {
             return $this->getResponse()
                 ->setHttpResponseCode(400);

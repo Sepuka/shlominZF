@@ -22,6 +22,7 @@ Ext.onReady(function() {
         fields: [
             {name: 'id', type: 'integer'},
             {name: 'login', type: 'string'},
+            {name: 'password', type: 'string'},
             {name: 'role', type: 'string'},
             {name: 'enabled', type: 'integer', convert: userStatus},
             {name: 'create'},
@@ -61,6 +62,7 @@ Ext.onReady(function() {
         autoScroll: true,
         columns: [
             {header: 'ЛОГИН', dataIndex: 'login', editor: 'textfield'},
+            {header: 'ПАРОЛЬ', dataIndex: 'password', editor: 'textfield'},
             {header: 'РОЛЬ', dataIndex: 'role', editor: {
                     typeAhead: true,
                     xtype: 'combobox',
