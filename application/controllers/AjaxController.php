@@ -50,15 +50,6 @@ class AjaxController extends Zend_Controller_Action
             $this->getResponse()->setHttpResponseCode(405);
             exit('expect AJAX');
         }
-
-        /**
-        $auth = Zend_Auth::getInstance();
-    	if (! $auth->hasIdentity()) {
-            $this->getRequest()->setDispatched(false);
-    		$this->getResponse()->setHttpResponseCode(403);
-            exit('not authority');
-        }
-         */
     }
 
     /**
@@ -448,49 +439,54 @@ class AjaxController extends Zend_Controller_Action
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
             return $this->getResponse()->setHttpResponseCode(403);
 
-        $row = Zend_Json::decode($this->getRequest()->getRawBody());
-        if (! array_key_exists('id', $row) || empty($row['id']))
+        $rows = Application_Model_Acl::prepareData($this->getRequest()->getRawBody());
+        if (! $rows)
             return $this->getResponse()
                 ->setHttpResponseCode(400)
-                ->appendBody('expected id param');
-        else
-            $id = intval($row['id']);
-        if (! array_key_exists('login', $row) || empty($row['login']))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expected login param');
-        else
-            $login = $row['login'];
-        if (! array_key_exists('password', $row) || empty($row['password']))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expected password param');
-        else
-            $password = $row['password'];
-        if (! array_key_exists('role', $row) || empty($row['role']))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expected role param');
-        else
-            $role = $row['role'];
-        if (! array_key_exists('enabled', $row) || empty($row['enabled']))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expected enabled param');
-        if ($row['enabled'] == 'Блокирован')
-            $enabled = 0;
-        else
-            $enabled = 1;
+                ->appendBody('wrong format');
 
-        $inst = new Application_Model_Acldb();
-        try {
-            $inst->editUser($id, $login, $password, $role, $enabled);
-        } catch (Acldb_Exception $ex) {
-            return $this->getResponse()
-                ->setHttpResponseCode(400);
-        } catch (Exception $ex) {
-            return $this->getResponse()
-                ->setHttpResponseCode(500);
+        foreach ($rows as $row) {
+            if (! array_key_exists('id', $row) || empty($row['id']))
+                return $this->getResponse()
+                    ->setHttpResponseCode(400)
+                    ->appendBody('expected id param');
+            else
+                $id = intval($row['id']);
+            if (! array_key_exists('login', $row) || empty($row['login']))
+                return $this->getResponse()
+                    ->setHttpResponseCode(400)
+                    ->appendBody('expected login param');
+            else
+                $login = $row['login'];
+            if (! array_key_exists('password', $row))
+                $password = '';
+            else
+                $password = $row['password'];
+            if (! array_key_exists('role', $row) || empty($row['role']))
+                return $this->getResponse()
+                    ->setHttpResponseCode(400)
+                    ->appendBody('expected role param');
+            else
+                $role = $row['role'];
+            if (! array_key_exists('enabled', $row) || empty($row['enabled']))
+                return $this->getResponse()
+                    ->setHttpResponseCode(400)
+                    ->appendBody('expected enabled param');
+            if ($row['enabled'] == 'Блокирован')
+                $enabled = 0;
+            else
+                $enabled = 1;
+
+            $inst = new Application_Model_Acldb();
+            try {
+                $inst->editUser($id, $login, $password, $role, $enabled);
+            } catch (Acldb_Exception $ex) {
+                return $this->getResponse()
+                    ->setHttpResponseCode(400);
+            } catch (Exception $ex) {
+                return $this->getResponse()
+                    ->setHttpResponseCode(500);
+            }
         }
 
     	$this->getResponse()
@@ -509,43 +505,50 @@ class AjaxController extends Zend_Controller_Action
         if (! $this->_ACL->isAllowed($this->_session->role, 'admin', 'edit'))
             return $this->getResponse()->setHttpResponseCode(403);
 
-        $row = Zend_Json::decode($this->getRequest()->getRawBody());
-        if (! array_key_exists('login', $row) || empty($row['login']))
+        $rows = Application_Model_Acl::prepareData($this->getRequest()->getRawBody());
+        if (! $rows)
             return $this->getResponse()
                 ->setHttpResponseCode(400)
-                ->appendBody('expected login param');
-        else
-            $login = $row['login'];
-        if (! array_key_exists('password', $row) || empty($row['password']))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expected password param');
-        else
-            $password = $row['password'];
-        if (! array_key_exists('role', $row) || empty($row['role']))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expected role param');
-        else
-            $role = $row['role'];
-        if (! array_key_exists('enabled', $row) || empty($row['enabled']))
-            return $this->getResponse()
-                ->setHttpResponseCode(400)
-                ->appendBody('expected enabled param');
-        if ($row['enabled'] == 'Блокирован')
-            $enabled = 0;
-        else
-            $enabled = 1;
+                ->appendBody('wrong format');
 
-        $inst = new Application_Model_Acldb();
-        try {
-            $inst->createUser($login, $password, $role, $enabled);
-        } catch (Acldb_Exception $ex) {
-            return $this->getResponse()
-                ->setHttpResponseCode(400);
-        } catch (Exception $ex) {
-            return $this->getResponse()
-                ->setHttpResponseCode(500);
+        foreach($rows as $row) {
+            if (! array_key_exists('login', $row) || empty($row['login']))
+                return $this->getResponse()
+                    ->setHttpResponseCode(400)
+                    ->appendBody('expected login param');
+            else
+                $login = $row['login'];
+            if (! array_key_exists('password', $row) || empty($row['password']))
+                return $this->getResponse()
+                    ->setHttpResponseCode(400)
+                    ->appendBody('expected password param');
+            else
+                $password = $row['password'];
+            if (! array_key_exists('role', $row) || empty($row['role']))
+                return $this->getResponse()
+                    ->setHttpResponseCode(400)
+                    ->appendBody('expected role param');
+            else
+                $role = $row['role'];
+            if (! array_key_exists('enabled', $row) || empty($row['enabled']))
+                return $this->getResponse()
+                    ->setHttpResponseCode(400)
+                    ->appendBody('expected enabled param');
+            if ($row['enabled'] == 'Блокирован')
+                $enabled = 0;
+            else
+                $enabled = 1;
+
+            $inst = new Application_Model_Acldb();
+            try {
+                $inst->createUser($login, $password, $role, $enabled);
+            } catch (Acldb_Exception $ex) {
+                return $this->getResponse()
+                    ->setHttpResponseCode(400);
+            } catch (Exception $ex) {
+                return $this->getResponse()
+                    ->setHttpResponseCode(500);
+            }
         }
 
     	$this->getResponse()
@@ -565,15 +568,12 @@ class AjaxController extends Zend_Controller_Action
             return $this->getResponse()->setHttpResponseCode(403);
 
         $inst = new Application_Model_Acldb();
-        $rows = Zend_Json::decode($this->getRequest()->getRawBody());
-        // Проверка что пришел массив
-        if (! is_array($rows))
+        $rows = Application_Model_Acl::prepareData($this->getRequest()->getRawBody());
+        if (! $rows)
             return $this->getResponse()
                 ->setHttpResponseCode(400)
-                ->appendBody('expected array');
-        // Если массив содержит один элемент, приведем его
-        if (! array_key_exists(0, $rows))
-            $rows = array($rows);
+                ->appendBody('wrong format');
+
         foreach ($rows as $key=>$row) {
             if (! array_key_exists('id', $row) || empty($row['id']))
                 return $this->getResponse()

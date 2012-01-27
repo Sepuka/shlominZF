@@ -224,5 +224,7 @@ class AdminController extends Zend_Controller_Action
         $this->view->cntGuest = $metaData['cntGuest'];
         $this->view->cntEnabled = $metaData['cntEnabled'];
         $this->view->cntDisabled = $metaData['cntDisabled'];
+        // Возможность сохранения дана только администраторам
+        $this->view->disabledSync = ($this->_session->role == 'administrator') ? 'false' : 'true';
     }
 }

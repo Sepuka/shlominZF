@@ -113,9 +113,20 @@ Ext.onReady(function() {
         },{
             iconCls: 'icon-save',
             text: 'Синхронизировать',
+            disabled: <?=$this->disabledSync;?>,
             handler: function() {
-                usersStore.sync();
-                usersStore.load();
+                // Для всех вновь создаваемых учетных записей требуется пароль
+                var fullPasswords = true;
+                for (var row in usersStore.getNewRecords()) {
+                    if (usersStore.getAt(row).get('password') == '') {
+                        Ext.Msg.alert('Ошибка', 'Создайте пароль для всех новых учетных записей!');
+                        fullPasswords = false;
+                    }
+                }
+                if (fullPasswords) {
+                    usersStore.sync();
+                    usersStore.load();
+                }
             }
         }]
     });

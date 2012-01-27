@@ -53,7 +53,8 @@ class Application_Model_Acldb extends Zend_Db_Table_Abstract
         if ($user === null)
             throw new Acldb_Exception('user ' . $id . ' not found');
         $user->login = $login;
-        $user->hash = md5($password . $this->_config->salt);
+        if ($password)
+            $user->hash = md5($password . $this->_config->salt);
         $user->role = $role;
         $user->enabled = $enabled;
         $user->change = date('Y-m-d H:i:s');
