@@ -7,6 +7,9 @@ class Acldb_Exception extends Exception {};
  */
 class Application_Model_Acldb extends Zend_Db_Table_Abstract
 {
+    const DISABLED      = 0;
+    const ENABLED       = 1;
+
     // Таблица базы данных
     protected $_name    = 'acl';
     // Первичный ключ
