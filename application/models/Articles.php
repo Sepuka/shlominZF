@@ -105,7 +105,7 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
     }
 
     /**
-     * Получение статьи по идентификатору
+     * Получение статьи по первичному ключу
      *
      * @param integer $id
      * @return Zend_Db_Table_Row_Abstract
@@ -113,5 +113,18 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
     public function getArticleByID($id)
     {
         return $this->find($id)->current();
+    }
+
+    /**
+     * Получение данных для Sitemap
+     *
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    static public function sitemap()
+    {
+        $model = new Application_Model_Articles();
+        $select = $model->select()
+            ->from('articles', array('id', new Zend_Db_Expr('DATE(changeDate) as changeDate')));
+        return $model->fetchAll($select);
     }
 }
