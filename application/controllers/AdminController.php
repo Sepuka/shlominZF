@@ -196,9 +196,11 @@ class AdminController extends Zend_Controller_Action
 
     /**
      * Вызов страницы для работы с mongoDB
+     *
+     * Используя представление dump.phtml работает с СУБД через контроллер AJAX
      * 
      * @link http://{HOST}/admin/dump
-     *
+     * @return void
      */
     public function dumpAction()
     {

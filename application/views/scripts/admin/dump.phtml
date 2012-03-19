@@ -26,7 +26,7 @@ Ext.onReady(function() {
 					url: '/ajax/dumpUpdateDocument',
 					method: 'POST',
                     params: {
-                        value: htmlEditor.getValue(),
+                        value: mongoEditor.getValue(),
                         key: toolbar.getComponent('key').getValue()
                     },
                     success: function(answer) {
@@ -64,15 +64,15 @@ Ext.onReady(function() {
         success: function(answer) {
             // Ответ приходит в виде JSON-массива
             answer = Ext.JSON.decode(answer.responseText);
-            htmlEditor.setValue(answer['value']);
+            mongoEditor.setValue(answer['value']);
             toolbar.items.get('key').setValue(answer['key']);
             toolbar.enable(true);
-            htmlEditor.setDisabled(false);
+            mongoEditor.setDisabled(false);
         },
         failure: function(failure) {
             answer = Ext.JSON.decode(failure.responseText);
             Ext.Msg.alert(answer['key'], answer['value']);
-            htmlEditor.setDisabled(true);
+            mongoEditor.setDisabled(true);
         },
         callback: function() {
             loadMask.hide();
@@ -124,7 +124,7 @@ Ext.onReady(function() {
         }
     });
 
-	var htmlEditor = Ext.create('Ext.form.HtmlEditor', {
+	var mongoEditor = Ext.create('Ext.form.field.TextArea', {
 		
 	});
 
@@ -142,13 +142,13 @@ Ext.onReady(function() {
 		},{
 			region: 'center',
 			itemId: 'centerMenuPanel',
-			items: [htmlEditor],
+			items: [mongoEditor],
 			bbar: toolbar
 		}]
 	});
 
 	keysList.setHeight(viewport.getComponent('westMenuPanel').getHeight());
-	htmlEditor.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
-	htmlEditor.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
+	mongoEditor.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
+	mongoEditor.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
 });
 </script>

@@ -32,7 +32,7 @@ Ext.onReady(function() {
 
 	var DumpIcon = new Ext.create('Ext.window.Window', AbstractIcon);
 	DumpIcon.setTitle('MongoDB');
-	DumpIcon.update('Редактирование служебной информации');
+	DumpIcon.update('Редактирование служебной информации: Контактных данных, скриптов яндекс-метрики, google analytics и т.п.');
 	DumpIcon.addListener('activate', function(self, opt) {
 		if (self.firstShow) {
 			self.firstShow--;

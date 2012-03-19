@@ -27,6 +27,14 @@ class IndexController extends Zend_Controller_Action
         $contacts = $mongoDB->findOne('contacts');
         if (! is_null($contacts))
             $layout->contacts = $contacts['value'];
+        # Скрипт google analytics
+        $googleAnalytics = $mongoDB->findOne('googleAnalytics');
+        if (! is_null($googleAnalytics))
+            $layout->googleAnalytics = $googleAnalytics['value'];
+        # Скрипт яндекс метрика
+        $yandexMetrica = $mongoDB->findOne('yandexMetrica');
+        if (! is_null($yandexMetrica))
+            $layout->yandexMetrica = $yandexMetrica['value'];
         $tags = $mongoDB->findOne('tags');
         if (! is_null($tags))
             $layout->tags = $tags['value'];
