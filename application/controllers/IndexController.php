@@ -38,5 +38,12 @@ class IndexController extends Zend_Controller_Action
         $tags = $mongoDB->findOne('tags');
         if (! is_null($tags))
             $layout->tags = $tags['value'];
+        # Статья на главную страницу
+        $articleModel = new Application_Model_Articles();
+        $titleArticle = $articleModel->getArticleByID($this->_config->titleArticleID);
+        if ($titleArticle !== null)
+            $layout->articleContent = $titleArticle->content;
+        else
+            $layout->articleContent = 'Вы могли бы посмотреть статьи в дереве слева';
     }
 }
