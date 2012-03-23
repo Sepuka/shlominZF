@@ -3,3 +3,4 @@ User-Agent:*
 Disallow:/admin/
 
 Visit-time:0200-0500
+Sitemap: http://xn--h1afdfc2d.xn--p1ai/sitemap

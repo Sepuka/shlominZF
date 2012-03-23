@@ -95,8 +95,9 @@ class Application_Model_Articles extends Zend_Db_Table_Abstract
             $article = $model->createRow(array(
                 'category'  => $categoryID,
                 'createDate'=> date('Y-m-d H:i:s'),
-                'headline' => $headline,
-                'content' => $content
+                'changeDate'=> date('Y-m-d H:i:s'),
+                'headline'  => $headline,
+                'content'   => $content
     		));
         }
         $article->save();

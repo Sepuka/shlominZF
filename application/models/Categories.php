@@ -102,11 +102,12 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 				'expanded'	=> ($forExpanded == $row['id']) ? true : false,
 				'children'	=> $this->getCategoriesTree($row['name'], $row['id'], $branchCategories));
 		}
-		# Получаем статьи нужной категории
+		# Получаем статьи нужной категории сортированные по дате изменений
 		$stmt = $this->getAdapter()
 		      ->select()
 		      ->from('articles', array('id', 'headline'))
 		      ->where('category=?', $articleID, Zend_Db::INT_TYPE)
+              ->order('changeDate DESC')
 		      ->query();
 		foreach ($stmt->fetchAll() as $row) {
 			$tree[] = array(
