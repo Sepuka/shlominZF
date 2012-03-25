@@ -19,6 +19,16 @@ class SitemapController extends Zend_Controller_Action
     {
         $this->getResponse()->setHttpResponseCode(404);
         $this->_helper->layout->setLayout('404');
+        $layout = Zend_Layout::getMvcInstance();
+        $mongoDB = new Application_Model_Mongodb($this->_config->mongo->DBname, $this->_config->mongo->docs->collection);
+        # Скрипт google analytics
+        $googleAnalytics = $mongoDB->findOne('googleAnalytics');
+        if (! is_null($googleAnalytics))
+            $layout->googleAnalytics = $googleAnalytics['value'];
+        # Скрипт яндекс метрика
+        $yandexMetrica = $mongoDB->findOne('yandexMetrica');
+        if (! is_null($yandexMetrica))
+            $layout->yandexMetrica = $yandexMetrica['value'];
     }
 
     public function init()
