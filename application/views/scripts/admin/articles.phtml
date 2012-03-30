@@ -4,97 +4,128 @@ Ext.require([
     'Ext.data.*'
 ]);
 Ext.onReady(function() {
-	// переменная хранит идентификатор текущей статьи
-	var articleID = 0;
-	// Переменная для хранения идентификатора выбранной категории
-	var categoryID = 0;
+    // переменная хранит идентификатор текущей статьи
+    var articleID = 0;
+    // Переменная для хранения идентификатора выбранной категории
+    var categoryID = 0;
 
-	var URLarticlesSave = '/ajax/articlesSave';
-	var URLarticlesView = '/admin/articlesView';
-	var URLarticlesGet = '/admin/getArticle';
-	var URLarticlesRemove = '/ajax/articlesRemove';
+    // Адреса для AJAX запросов
+    var URLarticlesSave = '/ajax/articlesSave';
+    var URLarticlesView = '/admin/articlesView';
+    var URLarticlesGet = '/admin/getArticle';
+    var URLarticlesRemove = '/ajax/articlesRemove';
 
-	var loadMask = new Ext.LoadMask(
-	    Ext.getBody(),
-	    {
-	        msg: 'Пожалуйста, подождите. Идет загрузка ...'
-	    });
+    var loadMask = new Ext.LoadMask(Ext.getBody(), {
+        msg: 'Пожалуйста, подождите. Идет загрузка ...'
+    });
 
-	var htmlEditor = Ext.create('Ext.form.HtmlEditor', {
-		
-	});
+    // хз зачем это
+    Ext.ns('Ext.ux.form.HtmlEditor');
+    // PrittyPrint кнопка
+    Ext.ux.form.HtmlEditor.PP = Ext.extend(Ext.util.Observable, {
+        init: function(cmp){
+            this.cmp = cmp;
+            this.cmp.on('render', this.onRender, this);
+        },
+        onRender: function(){
+            this.cmp.getToolbar().add([{
+                iconCls: 'icon-prittyprint',
+                handler: function(){
+                    this.cmp.insertAtCursor('<pre class="prettyprint"></pre>');
+                    Ext.Msg.alert("Выделение кода с помощью prettyPrint",
+                    "Для выделения кода он должен быть обернут в тег &lt;pre class='prettyprint'&gt; в общем случае. Можно указать язык таким образом" +
+                    "&lt;pre class='prettyprint lang-LANG'&gt; где LANG может быть одним из " +
+                    "'bsh', 'c', 'cc', 'cpp', 'cs', 'csh', 'cyc', 'cv', 'htm', 'html', 'java', 'js', 'm', 'mxml', 'perl', 'pl', 'pm', 'py', 'rb', 'sh', 'xhtml', 'xml', 'xsl'." +
+                    "Тег вставлен в редактор в конец");
+                    //this.cmp.setValue('<pre>вставить тег</pre>');
+                    // TODO: разобраться с получением выделения и обрамлением в теги
+                    //selected = window.frames[this.cmp.iframeEl.dom.name].getSelection();
+                    //var selRange = selected.getRangeAt(0);
+                    //selRange.toString();
+                },
+                scope: this,
+                tooltip: 'prettyPrint',
+                overflowText: 'prettyPrint'
+            }]);
+        }
+    });
 
-	Ext.define('topDir', {
-		extend: 'Ext.data.Model',
-		fields: ['id', 'text', 'children'],
-		hasMany: 'subDir'
-	});
-	Ext.define('subDir', {
-		extend: 'Ext.data.Model',
-		fields: ['id', 'text'],
-		belongsTo: 'topDir'
-	});
+    var htmlEditor = Ext.create('Ext.form.HtmlEditor', {
+        plugins: [new Ext.ux.form.HtmlEditor.PP()]
+    });
 
-	// Хранилище для дерева статей
-	var treeArticlesStore = Ext.create('Ext.data.TreeStore', {
-		model: 'topDir',
-		autoLoad: true,
-		proxy: {
-        	type: 'ajax',
-        	url : URLarticlesView,
-        	reader: {
-            	type: 'json',
-            	root: 'children',
-            	idProperty: 'id'
-        	}
-    	},
-    	root: {
-    		expanded: true,
-    		text: '/'
-    	}
-	});
+    Ext.define('topDir', {
+        extend: 'Ext.data.Model',
+        fields: ['id', 'text', 'children'],
+        hasMany: 'subDir'
+    });
+    Ext.define('subDir', {
+        extend: 'Ext.data.Model',
+        fields: ['id', 'text'],
+        belongsTo: 'topDir'
+    });
 
-	// Навигационное дерево статей
-	var treeArticles = Ext.create('Ext.tree.Panel', {
-		store: treeArticlesStore,
-		height: 400,
-		listeners: {
-			select: function(rowModel, dataModel, row, obj) {
-			    // Обрабатываем клики только на статьи. Папки игнорируем
-			    if (dataModel.get('leaf')) {
-			        categoryID = 0;
-			        loadArticle(dataModel.get('id'));
-			    } else {
-			        categoryID = dataModel.get('id');
-			        articleID = 0;
-			        htmlEditor.setValue('Здесь вы можете вписать текст новой статьи');
+    // Хранилище для дерева статей
+    var treeArticlesStore = Ext.create('Ext.data.TreeStore', {
+        model: 'topDir',
+        autoLoad: true,
+        proxy: {
+            type: 'ajax',
+            url : URLarticlesView,
+            reader: {
+                type: 'json',
+                root: 'children',
+                idProperty: 'id'
+            }
+        },
+        root: {
+            expanded: true,
+            text: '/'
+        }
+    });
+
+    // Навигационное дерево статей
+    var treeArticles = Ext.create('Ext.tree.Panel', {
+        store: treeArticlesStore,
+        height: 400,
+        listeners: {
+            select: function(rowModel, dataModel, row, obj) {
+                // Обрабатываем клики только на статьи. Папки игнорируем
+                if (dataModel.get('leaf')) {
+                    categoryID = 0;
+                    loadArticle(dataModel.get('id'));
+                } else {
+                    categoryID = dataModel.get('id');
+                    articleID = 0;
+                    htmlEditor.setValue('Здесь вы можете вписать текст новой статьи');
                     toolbar.getComponent('headline').setValue('Заголовок новой статьи');
-			    }
-			}
-		}
-	});
+                }
+            }
+        }
+    });
 
-	var toolbar = Ext.create('Ext.toolbar.Toolbar', {
-		items: [{
-			itemId: 'headline',
-			xtype: 'textfield',
-			fieldLabel: 'Заголовок статьи',
-			width: 400
-		},{
-			xtype: 'tbseparator'
-		},{
-			xtype: 'button',
-			text: 'Сохранить',
-			handler: function() {
-			    if (articleID == 0 && categoryID == 0) {
-			        Ext.Msg.alert('Ошибка', 'Выберите статью для редактирования или папку для создания новой статьи');
-			        return;
-			    }
-				loadMask.show();
-				toolbar.disable(true);
-				Ext.Ajax.request({
-					url: URLarticlesSave,
-					method: 'POST',
+    // Нижний тулбар
+    var toolbar = Ext.create('Ext.toolbar.Toolbar', {
+        items: [{
+            itemId: 'headline',
+            xtype: 'textfield',
+            fieldLabel: 'Заголовок статьи',
+            width: 400
+        },{
+            xtype: 'tbseparator'
+        },{
+            xtype: 'button',
+            text: 'Сохранить',
+            handler: function() {
+                if (articleID == 0 && categoryID == 0) {
+                    Ext.Msg.alert('Ошибка', 'Выберите статью для редактирования или папку для создания новой статьи');
+                    return;
+                }
+                loadMask.show();
+                toolbar.disable(true);
+                Ext.Ajax.request({
+                    url: URLarticlesSave,
+                    method: 'POST',
                     params: {
                         content: htmlEditor.getValue(),
                         headline: toolbar.getComponent('headline').getValue(),
@@ -108,7 +139,7 @@ Ext.onReady(function() {
                         categoryID = 0;
                     },
                     failure: function() {
-                    	loadMask.hide();
+                        loadMask.hide();
                         Ext.Msg.alert("Ошибка", "Неудалось сохранить данные");
                     },
                     callback: function() {
@@ -117,27 +148,27 @@ Ext.onReady(function() {
                         // TODO: баг ExtJS
                         //treeArticlesStore.load();
                     }
-				})
-			}
-		},{
-			xtype: 'button',
-			text: 'Обновить',
-			handler: function() {
+                })
+            }
+        },{
+            xtype: 'button',
+            text: 'Обновить',
+            handler: function() {
                 if (articleID > 0)
                     loadArticle(articleID);
                 else
                     Ext.Msg.alert('Ошибка', 'Выберите статью для редактирования!');
             }
-		},{
-			xtype: 'button',
-			text: 'Удалить',
-			handler: function() {
+        },{
+            xtype: 'button',
+            text: 'Удалить',
+            handler: function() {
                 if (articleID > 0) {
                     loadMask.show();
-				    toolbar.disable(true);
-				    Ext.Ajax.request({
-    					url: URLarticlesRemove,
-    					method: 'POST',
+                    toolbar.disable(true);
+                    Ext.Ajax.request({
+                        url: URLarticlesRemove,
+                        method: 'POST',
                         params: {
                             id: articleID
                         },
@@ -147,7 +178,7 @@ Ext.onReady(function() {
                             articleID = 0;
                         },
                         failure: function() {
-                        	loadMask.hide();
+                            loadMask.hide();
                             Ext.Msg.alert("Ошибка", "Неудалось удалить статью");
                         },
                         callback: function() {
@@ -156,66 +187,63 @@ Ext.onReady(function() {
                             // TODO: баг ExtJS
                             // treeArticlesStore.load();
                         }
-    				})
-                }
-                else
+                    })
+                } else
                     Ext.Msg.alert('Ошибка', 'Выберите статью для удаления!');
-			}
-		}]
-	});
+            }
+        }]
+    });
 
-	var warning = Ext.create('Ext.panel.Panel', {
-		title: 'Возможные проблемы',
-		html: <?=$this->warnings?>
-	});
+    var warning = Ext.create('Ext.panel.Panel', {
+        title: 'Возможные проблемы',
+        html: <?=$this->warnings?>
+    });
 
-	// Загрузка статьи в область редактирования
-	function loadArticle(id)
-	{
-	    articleID = id;
-	    loadMask.show();
-	    toolbar.disable(true);
-	    Ext.Ajax.request({
+    // Загрузка статьи в область редактирования
+    function loadArticle(id) {
+        articleID = id;
+        loadMask.show();
+        toolbar.disable(true);
+        Ext.Ajax.request({
             url: URLarticlesGet,
-        method: 'GET',
-        params: {
-            articleID: id,
-        },
-        success: function(answer) {
-            // Ответ приходит в виде JSON-массива
-            answer = Ext.JSON.decode(answer.responseText);
-            htmlEditor.setValue(answer['content']);
-            toolbar.items.get('headline').setValue(answer['headline']);
-        },
-        failure: function() {
-            Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
-        },
-        callback: function() {
-            loadMask.hide();
-            toolbar.enable(true);
-        }
+            method: 'GET',
+            params: {
+                articleID: id,
+            },
+            success: function(answer) {
+                // Ответ приходит в виде JSON-массива
+                answer = Ext.JSON.decode(answer.responseText);
+                htmlEditor.setValue(answer['content']);
+                toolbar.items.get('headline').setValue(answer['headline']);
+            },
+            failure: function() {
+                Ext.Msg.alert("Ошибка AJAX", "Server communication failure");
+            },
+            callback: function() {
+                loadMask.hide();
+                toolbar.enable(true);
+            }
         })
-	}
+    }
 
-	var viewport = Ext.create('Ext.container.Viewport', {
-		layout: 'border',
-		items: [
-		{
-    	    region: 'north',
-    	    items: linksBar
-    	},{
-			region: 'west',
-			itemId: 'westMenuPanel',
-			width: 200,
-			items: [warning, treeArticles]
-		},{
-			region: 'center',
-			itemId: 'centerMenuPanel',
-			items: htmlEditor,
-			bbar: toolbar
-		}]
-	});
-	htmlEditor.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
-	htmlEditor.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
+    var viewport = Ext.create('Ext.container.Viewport', {
+        layout: 'border',
+        items: [{
+            region: 'north',
+            items: linksBar
+        },{
+            region: 'west',
+            itemId: 'westMenuPanel',
+            width: 200,
+            items: [warning, treeArticles]
+        },{
+            region: 'center',
+            itemId: 'centerMenuPanel',
+            items: htmlEditor,
+            bbar: toolbar
+        }]
+    });
+    htmlEditor.setHeight(viewport.getComponent('centerMenuPanel').getHeight());
+    htmlEditor.setWidth(viewport.getComponent('centerMenuPanel').getWidth());
 });
 </script>
