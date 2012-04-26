@@ -18,14 +18,14 @@ class ArticleController extends Zend_Controller_Action
     public function __call($method, $args)
     {
         $this->getResponse()->setHttpResponseCode(404);
-	$this->_helper->layout->setLayout('404');
+        $this->_helper->layout->setLayout('404');
     }
 
     public function init()
     {
         $this->_articleModel = new Application_Model_Articles();
         $this->_config = Application_Model_MemcachedConfig::getInstance();
-    	$this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
+        $this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 
     /**
@@ -39,7 +39,7 @@ class ArticleController extends Zend_Controller_Action
     public function viewAction()
     {
         if (! $this->getRequest()->isGet())
-    		return $this->getResponse()->setHttpResponseCode(415);
+            return $this->getResponse()->setHttpResponseCode(415);
 
         if (is_null($id = $this->getRequest()->getParam('id')))
             return $this->getResponse()
