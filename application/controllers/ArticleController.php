@@ -30,7 +30,7 @@ class ArticleController extends Zend_Controller_Action
 
     /**
      * Действие показывающее запрошенную статью
-     * 
+     *
      * Обрабатывает URL вида /article/37 которые преобразуются в index.php
      * с помощью маршрутов из application/configs/application.ini
      *
@@ -71,5 +71,9 @@ class ArticleController extends Zend_Controller_Action
         $yandexMetrica = $mongoDB->findOne('yandexMetrica');
         if (! is_null($yandexMetrica))
             $layout->yandexMetrica = $yandexMetrica['value'];
+        # Кнопка twitter
+        $twitterButton = $mongoDB->findOne('twitterButton');
+        if (! is_null($twitterButton))
+            $layout->twitterButton = $twitterButton['value'];
     }
 }
