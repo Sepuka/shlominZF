@@ -35,6 +35,10 @@ class IndexController extends Zend_Controller_Action
         $yandexMetrica = $mongoDB->findOne('yandexMetrica');
         if (! is_null($yandexMetrica))
             $layout->yandexMetrica = $yandexMetrica['value'];
+        # Кнопка twitter
+        $twitterButton = $mongoDB->findOne('twitterButton');
+        if (! is_null($twitterButton))
+            $layout->twitterButton = $twitterButton['value'];
         $tags = $mongoDB->findOne('tags');
         if (! is_null($tags))
             $layout->tags = $tags['value'];

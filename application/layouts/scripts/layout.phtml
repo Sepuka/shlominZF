@@ -1,6 +1,4 @@
-<?php
-echo $this->doctype();
-?>
+<?=$this->doctype()?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -10,6 +8,7 @@ echo $this->doctype();
     <?=$this->headScript()->appendFile('/extjs/bootstrap.js')
         ->appendFile('/prettify/prettify.js')?>
 <?=$this->layout()->googleAnalytics?>
+<?=$this->layout()->twitterButton?>
 </head>
 <body onload="prettyPrint()">
 <?=$this->layout()->yandexMetrica?>
