@@ -34,7 +34,7 @@ class Application_Model_Mongodb
 
     /**
      * Получение множества документов по ключу
-     * 
+     *
      * Метод возвращает курсор реализующий шаблон Итератор
      *
      * @param string $key
@@ -54,7 +54,7 @@ class Application_Model_Mongodb
 
     /**
      * Получение документа по ключу
-     * 
+     *
      * К элементам полученного курсора следует обращаться как к массиву
      *
      * @param string $key
@@ -87,7 +87,7 @@ class Application_Model_Mongodb
 
     /**
      * Создание/обновление нового документа
-     * 
+     *
      * [НЕИСПОЛЬЗУЕТСЯ]
      *
      * @throws MongoDBInsertException
@@ -116,7 +116,7 @@ class Application_Model_Mongodb
 
     /**
      * Удаление документа
-     * 
+     *
      * [НЕИСПОЛЬЗУЕТСЯ]
      *
      * @throws MongoDBRemoveException
@@ -138,6 +138,7 @@ class Application_Model_Mongodb
      */
     public static function removeWrongChars($str)
     {
+        $str = str_replace("'", '"', $str);
         return str_replace(array(chr(10), chr(13)), '', $str);
     }
 }
