@@ -38,7 +38,7 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	 * Конвертирует результат выборки в строку
 	 * Возвращает строку вида [["name1","name1"],["name2","name2"], ...]
 	 * для использования в html элементе select
-	 * 
+	 *
 	 * @param Zend_Db_Statement $stmt
 	 * @return string
 	 */
@@ -54,6 +54,9 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 
 	/**
 	 * Получение родословной категории
+     *
+     * Например возвращает массив array([0]=>71,[1]=>63)
+     * где 71 это ID программирование, 63 ID python
 	 *
 	 * @param mixed $row
 	 * @param array $branch
@@ -90,16 +93,12 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
             ->where('parent=?', $parent)
             ->order('sequence ASC');
 
-        if (is_array($branchCategories))
-            $forExpanded = array_shift($branchCategories);
-        else $forExpanded = false;
-
 		# Получаем папки нужной категории
 		foreach ($this->fetchAll($select) as $row) {
 			$tree[] = array(
                 'id'		=> $row['id'],
 				'text'		=> $row['name'],
-				'expanded'	=> ($forExpanded == $row['id']) ? true : false,
+				'expanded'	=> (in_array($row['id'], $branchCategories)) ? true : false,
 				'children'	=> $this->getCategoriesTree($row['name'], $row['id'], $branchCategories));
 		}
 		# Получаем статьи нужной категории сортированные по дате изменений
@@ -157,7 +156,7 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 
 	/**
 	 * Редактирование категорий
-	 * 
+	 *
 	 * @throws Category_Exception
 	 * @param integer $id
 	 * @param integer $sequence
@@ -211,10 +210,10 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 	/**
 	 * Удаление категорий
 	 *
-	 * Каскадно удаляет указанную категорию, а также всех ее потомков и 
+	 * Каскадно удаляет указанную категорию, а также всех ее потомков и
 	 * статьи. Т.к. каскадное удаление фреймворка работает не правильно
 	 * (статьи удаляет, а категории нет) пришлось написать свою реализацию
-	 * 
+	 *
 	 * @param integer $id
 	 * @return void
 	 */
@@ -232,7 +231,7 @@ class Application_Model_Categories extends Zend_Db_Table_Abstract
 
 	/**
 	 * Поиск неверных категорий
-	 * 
+	 *
 	 * Ищет некорневые категории неимеющие родителя
 	 *
 	 * @return string

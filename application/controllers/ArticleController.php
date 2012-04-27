@@ -26,6 +26,7 @@ class ArticleController extends Zend_Controller_Action
         $this->_articleModel = new Application_Model_Articles();
         $this->_config = Application_Model_MemcachedConfig::getInstance();
         $this->getResponse()->setHeader('Content-Type', 'text/html; charset=UTF-8');
+        $this->_helper->viewRenderer->setNoRender();
     }
 
     /**
